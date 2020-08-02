@@ -9,12 +9,58 @@
 //
 ////////////////////////////////////////////////////////////////////////
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+
 #include "dracula.h"
 #include "DraculaView.h"
 #include "Game.h"
+#include "Places.h"
+
+// Local Static Function Declarations
+void doFirstMove(DraculaView dv);
+void makeRandomMove(DraculaView dv, PlaceId *validMoves, int numValidMoves);
 
 void decideDraculaMove(DraculaView dv)
 {
-	// TODO: Replace this with something better!
-	registerBestPlay("CD", "Mwahahahaha");
+	if (DvGetRound(dv) == 0) {
+		doFirstMove(dv);
+		return;
+	}
+
+	int numValidMoves = 0;
+	PlaceId *validMoves = DvGetValidMoves(dv, &numValidMoves);
+	
+	
+	// Random first move with slight error checking
+	if (numValidMoves == 0) {
+		registerBestPlay("TP", "Mwahahahaha");
+	} else {
+		printf("Hello\n");
+		makeRandomMove(dv, validMoves, numValidMoves);
+	}
+	
+	free(validMoves);
+	
+	return;
+	// Other better moves below 
+}
+
+void doFirstMove(DraculaView dv) 
+{
+	registerBestPlay("VI", "Mwahahahaha");
+	return;
+	
+}
+
+void makeRandomMove(DraculaView dv, PlaceId *validMoves, int numValidMoves) 
+{
+	// Use time function to get random seed
+	unsigned int seed = (unsigned int) time(NULL);
+	srand(seed);
+	int randomIndex = rand() % numValidMoves;
+	char *play = (char *) placeIdToAbbrev(validMoves[randomIndex]);
+	registerBestPlay(play, "Mwahahahaha");
+	return; 
 }
