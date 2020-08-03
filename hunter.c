@@ -33,61 +33,29 @@
 #include "Game.h"
 #include "Places.h"
 
-// Local Static Function Declarations
-void doFirstMove(HunterView hv);
-void makeRandomMove(HunterView hv, PlaceId *validMoves, int numValidMoves);
+
+struct player {
+	PlaceId *path;
+	int pathcount;
+}
+
+//---------------------- Local Functions ------------------------//
+
+
+
+//---------------------------------------------------------------//
+
+// Aim of this algorithm is to corner the Dracula 
 
 void decideHunterMove(HunterView hv)
 {
-	if (HvGetRound(hv) == 0) {
-		doFirstMove(hv);
-		return;
+	int round = HvGetRound(hv);
+	Player current = HvGetPlayer(hv);
+	if (round == 0 && current = PLAYER_LORD_GODALMING) {
+		
 	}
-
-	int numValidMoves = 0;
-	PlaceId *validMoves = HvWhereCanIGo(hv, &numValidMoves);
 	
-	// Get a random first move
-	makeRandomMove(hv, validMoves, numValidMoves);
-
-	free(validMoves);
 	
-	return;
-	// Other better moves below 
-}
-
-void doFirstMove(HunterView hv) 
-{
-	Player hunter = HvGetPlayer(hv);
-	switch(hunter) {
-		case PLAYER_LORD_GODALMING:	
-			registerBestPlay("SR", "YOLO");
-			break;
-		case PLAYER_DR_SEWARD:
-			registerBestPlay("SZ", "YOLO");
-			break;
-		case PLAYER_VAN_HELSING:
-			registerBestPlay("MI", "YOLO");
-			break;
-		case PLAYER_MINA_HARKER:
-			registerBestPlay("LE", "YOLO");
-			break;
-		case PLAYER_DRACULA:
-			fprintf(stderr, "ERROR: PLAYER IS NOT A HUNTER\n");
-			exit(EXIT_FAILURE);
-			break;
-	}
-	return;
 	
-}
-
-void makeRandomMove(HunterView hv, PlaceId *validMoves, int numValidMoves) 
-{
-	// Use time function to get random seed
-	unsigned int seed = (unsigned int) time(NULL);
-	srand(seed);
-	int randomIndex = rand() % numValidMoves;
-	char *play = (char *) placeIdToAbbrev(validMoves[randomIndex]);
-	registerBestPlay(play, "YOLO");
-	return; 
+	registerBestPlay("TO", "Have we nothing Toulouse?");
 }
