@@ -27,35 +27,129 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <string.h>
 
 #include "hunter.h"
 #include "HunterView.h"
 #include "Game.h"
 #include "Places.h"
 
-
-struct player {
+typedef struct hunter {
 	PlaceId *path;
 	int pathcount;
-}
+} Hunter;
 
 //---------------------- Local Functions ------------------------//
 
-
+char *createMessage(int distance);
 
 //---------------------------------------------------------------//
 
 // Aim of this algorithm is to corner the Dracula 
+// Version 1 - The hunters scout in predefined paths. If Dracula trail is 
+// found, then move towards the most recent location. Else, randomly 
+// wander about until the Dracula is found again.
 
-void decideHunterMove(HunterView hv)
-{
-	int round = HvGetRound(hv);
+void decideHunterMove(HunterView hv) {
+	static bool scoutingFinished = false;
+   int round = HvGetRound(hv);
 	Player current = HvGetPlayer(hv);
-	if (round == 0 && current = PLAYER_LORD_GODALMING) {
-		
-	}
-	
-	
-	
-	registerBestPlay("TO", "Have we nothing Toulouse?");
+
+   // If Dracula or trail found, go towards that direction
+   PlaceId DraculaLoc;
+   int trail;
+   int *trailpointer = &trail;
+   DraculaLoc = HvGetLastKnownDraculaLocation(hv, trailpointer);
+   if (DraculaLoc != NOWHERE) {
+      int distance;
+      int *pathLength = &distance;
+      PlaceId *path = HvGetShortestPathTo(hv, current, DraculaLoc, pathLength);
+      char *name = (char *)placeIdToAbbrev(path[0]);
+      char *message = createMessage(distance);
+      registerBestPlay(name, message);
+   }
+
+   // initial path of hunters
+   if (round == 0) {
+      switch(current) {
+         case PLAYER_LORD_GODALMING:
+         registerBestPlay("SR", "Bleh");     
+         break;
+      case PLAYER_DR_SEWARD:
+         registerBestPlay("MR", "bLeh");
+         break;
+      case PLAYER_VAN_HELSING:
+         registerBestPlay("NP", "blEh");  
+         break;
+      case PLAYER_MINA_HARKER:
+         registerBestPlay("AT", "bleH");   
+         break;
+      case PLAYER_DRACULA:
+         break;
+      }
+   } else {
+      char *name;
+      PlaceId *path;
+      switch(current) {
+         case PLAYER_LORD_GODALMING:
+         path = HvGetShortestPathTo(hv, current, LIVERPOOL, NULL);
+         name = (char *)placeIdToAbbrev(path[0]);
+         registerBestPlay(name, "Bleh");     
+         break;
+      case PLAYER_DR_SEWARD:
+         path = HvGetShortestPathTo(hv, current, AMSTERDAM, NULL);
+         name = (char *)placeIdToAbbrev(path[0]);
+         registerBestPlay(name, "bLeh");
+         break;
+      case PLAYER_VAN_HELSING:
+         path = HvGetShortestPathTo(hv, current, LEIPZIG, NULL);
+         name = (char *)placeIdToAbbrev(path[0]);
+         registerBestPlay(name, "blEh");  
+         break;
+      case PLAYER_MINA_HARKER:
+         path = HvGetShortestPathTo(hv, current, BUDAPEST, NULL);
+         name = (char *)placeIdToAbbrev(path[0]);
+         registerBestPlay(name, "bleH");   
+         break;
+      case PLAYER_DRACULA:
+         break;
+      }
+   }
+}	
+
+//---------------------- Local Functions ------------------------//
+
+char *createMessage(int distance) {
+   if (distance == 1) return "Distance of 1";
+   else if (distance == 2) return "Distance of 2";
+   else if (distance == 3) return "Distance of 3";
+   else if (distance == 4) return "Distance of 4";
+   else if (distance == 5) return "Distance of 5";
+   else return "Nothing new";
 }
+
+void makeRandomMove(HunterView hv, PlaceId *validMoves, int numValidMoves) {
+	unsigned int seed = (unsigned int) time();
+	srand(seed);
+	int randomIndex = rand() % numValidMoves;
+	char *play = (char *) placeIdToAbbrev(validMoves[randomIndex]);
+	registerBestPlay(play, "YOLO");
+}
+
+//------------------------- Backup Functions ---------------------------//
+
+/*
+
+// Random move generator 
+void makeRandomMove(HunterView hv, PlaceId *validMoves, int numValidMoves) 
+{
+	// Use time function to get random seed
+	unsigned int seed = (unsigned int) time(NULL);
+	srand(seed);
+	int randomIndex = rand() % numValidMoves;
+	char *play = (char *) placeIdToAbbrev(validMoves[randomIndex]);
+	registerBestPlay(play, "YOLO");
+	return; 
+}
+
+*/
