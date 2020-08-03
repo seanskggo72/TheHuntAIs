@@ -33,9 +33,36 @@
 #include "Game.h"
 #include "Places.h"
 
-// Local Static Function Declarations
-void doFirstMove(HunterView hv);
-void makeRandomMove(HunterView hv, PlaceId *validMoves, int numValidMoves);
+void initialLocation(HunterView hv)
+{
+   Player hunter = HvGetPlayer(hv);
+   switch(hunter) {
+      case PLAYER_LORD_GODALMING:
+         registerBestPlay("SR", "Bleh");
+         break;
+      case PLAYER_DR_SEWARD:
+         registerBestPlay("MR", "bLeh");
+         break;
+      case PLAYER_VAN_HELSING:
+         registerBestPlay("NP", "blEh");
+         break;
+      case PLAYER_MINA_HARKER:
+         registerBestPlay("AT", "bleH");
+         break;
+      case PLAYER_DRACULA:
+         fprintf(stderr, "ERROR: PLAYER IS NOT A HUNTER\n");
+         exit(EXIT_FAILURE);
+         break;
+   }
+   return;
+}
+
+void decideHunterMove(HunterView hv)
+{
+   registerBestPlay("TO", "Have we nothing Toulouse?");
+}
+
+/* Just in case we need
 
 void decideHunterMove(HunterView hv)
 {
@@ -56,30 +83,7 @@ void decideHunterMove(HunterView hv)
 	// Other better moves below 
 }
 
-void doFirstMove(HunterView hv) 
-{
-	Player hunter = HvGetPlayer(hv);
-	switch(hunter) {
-		case PLAYER_LORD_GODALMING:	
-			registerBestPlay("SR", "YOLO");
-			break;
-		case PLAYER_DR_SEWARD:
-			registerBestPlay("SZ", "YOLO");
-			break;
-		case PLAYER_VAN_HELSING:
-			registerBestPlay("MI", "YOLO");
-			break;
-		case PLAYER_MINA_HARKER:
-			registerBestPlay("LE", "YOLO");
-			break;
-		case PLAYER_DRACULA:
-			fprintf(stderr, "ERROR: PLAYER IS NOT A HUNTER\n");
-			exit(EXIT_FAILURE);
-			break;
-	}
-	return;
-	
-}
+
 
 void makeRandomMove(HunterView hv, PlaceId *validMoves, int numValidMoves) 
 {
@@ -91,3 +95,6 @@ void makeRandomMove(HunterView hv, PlaceId *validMoves, int numValidMoves)
 	registerBestPlay(play, "YOLO");
 	return; 
 }
+
+
+*/ 
