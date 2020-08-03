@@ -42,6 +42,7 @@ typedef struct hunter {
 //---------------------- Local Functions ------------------------//
 
 char *createMessage(int distance);
+void makeRandomMove(HunterView hv);
 
 //---------------------------------------------------------------//
 
@@ -51,7 +52,9 @@ char *createMessage(int distance);
 // wander about until the Dracula is found again.
 
 void decideHunterMove(HunterView hv) {
-	static bool scoutingFinished = false;
+   
+   makeRandomMove(hv);
+   return;
    int round = HvGetRound(hv);
 	Player current = HvGetPlayer(hv);
 
@@ -92,21 +95,29 @@ void decideHunterMove(HunterView hv) {
       PlaceId *path;
       switch(current) {
          case PLAYER_LORD_GODALMING:
+         if (HvGetPlayerLocation(hv, PLAYER_LORD_GODALMING) == LIVERPOOL)
+            makeRandomMove(hv);
          path = HvGetShortestPathTo(hv, current, LIVERPOOL, NULL);
          name = (char *)placeIdToAbbrev(path[0]);
          registerBestPlay(name, "Bleh");     
          break;
       case PLAYER_DR_SEWARD:
+         if (HvGetPlayerLocation(hv, PLAYER_DR_SEWARD) == AMSTERDAM)
+            makeRandomMove(hv);
          path = HvGetShortestPathTo(hv, current, AMSTERDAM, NULL);
          name = (char *)placeIdToAbbrev(path[0]);
          registerBestPlay(name, "bLeh");
          break;
       case PLAYER_VAN_HELSING:
+         if (HvGetPlayerLocation(hv, PLAYER_VAN_HELSING) == LEIPZIG) 
+            makeRandomMove(hv);
          path = HvGetShortestPathTo(hv, current, LEIPZIG, NULL);
          name = (char *)placeIdToAbbrev(path[0]);
          registerBestPlay(name, "blEh");  
          break;
       case PLAYER_MINA_HARKER:
+         if (HvGetPlayerLocation(hv, PLAYER_MINA_HARKER) == BUDAPEST) 
+            makeRandomMove(hv);
          path = HvGetShortestPathTo(hv, current, BUDAPEST, NULL);
          name = (char *)placeIdToAbbrev(path[0]);
          registerBestPlay(name, "bleH");   
@@ -128,12 +139,22 @@ char *createMessage(int distance) {
    else return "Nothing new";
 }
 
-void makeRandomMove(HunterView hv, PlaceId *validMoves, int numValidMoves) {
-	unsigned int seed = (unsigned int) time();
+void makeRandomMove(HunterView hv) {
+	int numValidMoves;
+   int *numReturnedLocs = &numValidMoves;
+   PlaceId *validMoves = HvWhereCanIGo(hv, numReturnedLocs);
+   unsigned int seed = (unsigned int)time(NULL);
 	srand(seed);
-	int randomIndex = rand() % numValidMoves;
-	char *play = (char *) placeIdToAbbrev(validMoves[randomIndex]);
+   if (numValidMoves == 0) {
+      printf("No legal moves for hunter\n");
+      exit(EXIT_FAILURE);
+   } else {
+	   int randomIndex = rand() % numValidMoves;
+      char *play = (char *)placeIdToAbbrev(validMoves[randomIndex]);
+   }
+   printf("%s\n", play);
 	registerBestPlay(play, "YOLO");
+   return;
 }
 
 //------------------------- Backup Functions ---------------------------//
@@ -150,6 +171,22 @@ void makeRandomMove(HunterView hv, PlaceId *validMoves, int numValidMoves)
 	char *play = (char *) placeIdToAbbrev(validMoves[randomIndex]);
 	registerBestPlay(play, "YOLO");
 	return; 
+}
+
+void randomMove(HunterView hv) {
+   int places;
+   int *numReturnedLocs = &places;
+   PlaceId *options = HvWhereCanIGo(hv, numReturnedLocs);
+   int random = rand();
+   printf("%d\n", places);
+   if (places == 0) {
+      random = 0;
+   } else {
+      random = random % places;
+   }
+   printf("%d", random);
+   char *name = (char *)placeIdToAbbrev(options[random]);
+   registerBestPlay(name, "Random Move");
 }
 
 */
