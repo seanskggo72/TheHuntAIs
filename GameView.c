@@ -521,6 +521,9 @@ PlaceId *GvGetTrapLocations(GameView gv, int *numTraps)
 	return trapLocations;
 }
 
+Map GvGetMap(GameView gv) {
+	return gv->map;
+}
 ////////////////////////////////////////////////////////////////////////
 // Game History
 

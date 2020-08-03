@@ -21,6 +21,7 @@
 #include "Game.h"
 #include "Places.h"
 // add your own #includes here
+#include "Map.h"
 
 typedef struct gameView *GameView;
 
@@ -215,6 +216,12 @@ PlaceId *GvGetLocationHistory(GameView gv, Player player,
  */
 PlaceId *GvGetLastLocations(GameView gv, Player player, int numLocs,
                             int *numReturnedLocs, bool *canFree);
+                            
+/**
+ * Returns the Map 
+ * Map should not be altered in ANY WAY by the caller AI
+ */
+Map GvGetMap(GameView gv);
 
 ////////////////////////////////////////////////////////////////////////
 // Making a Move
