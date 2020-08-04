@@ -122,6 +122,10 @@ PlaceId *DvGetTrapLocations(DraculaView dv, int *numTraps)
 	return GvGetTrapLocations(dv->gv, numTraps);
 }
 
+Map DvGetMap(DraculaView dv) {
+	return GvGetMap(dv->gv);
+}
+
 ////////////////////////////////////////////////////////////////////////
 // Making a Move
 
