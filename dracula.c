@@ -27,6 +27,8 @@ void doFirstMove(DraculaView dv);
 void makeRandomMove(DraculaView dv, PlaceId *validMoves, int *numValidMoves);
 void rmMovesInEndOfDirectPlayerPath(DraculaView dv, Map map, 
 	PlaceId *validMoves, int *numValidMoves);
+void goToCastleDrac(DraculaView dv, Map map, PlaceId *validMoves, 
+	int *numValidMoves, bool *moveMade);
 	
 // Local utility functions
 PlaceId *findPathBFS(Map map, PlaceId src, PlaceId dest, bool getPath, 
@@ -62,6 +64,11 @@ void decideDraculaMove(DraculaView dv)
 	// maybe return early, maybe continue? maybe this logic should 
 	// even come after removeMovesInDirectPlayerPath??
 	
+	if (DvGetHealth(dv, PLAYER_DRACULA) <= 20) {
+		bool moveMade = false;
+		goToCastleDrac(dv, map, validMoves, &numValidMoves, &moveMade);
+		if (moveMade) return;
+	}
 	
 	// If the current bestPlay is in the shortest path of a player to drac,
 	// remove it from validMoves and suggest another?
@@ -69,6 +76,8 @@ void decideDraculaMove(DraculaView dv)
 	rmMovesInEndOfDirectPlayerPath(dv, map, validMoves, &numValidMoves);
 	makeRandomMove(dv, validMoves, &numValidMoves);
 	
+	// if all hunters are nearby, hide?
+	//checkIfHide();
 	
 	free(validMoves);
 	
@@ -79,13 +88,18 @@ void decideDraculaMove(DraculaView dv)
 
 void doFirstMove(DraculaView dv) 
 {
-	registerBestPlay("VI", "Mwahahahaha");
+	registerBestPlay("BR", "Mwahahahaha");
 	return;
 	
 }
 
 void makeRandomMove(DraculaView dv, PlaceId *validMoves, int *numValidMoves) 
 {
+	// take care of mod 0 case
+	if (*numValidMoves == 0) {
+		return;
+	}
+	
 	// Use time function to get random seed
 	unsigned int seed = (unsigned int) time(NULL);
 	srand(seed);
@@ -132,30 +146,79 @@ void rmMovesInEndOfDirectPlayerPath(DraculaView dv, Map map,
 	// if they are close (i.e. within <= 5 cities)
 	
 	// these if statements call internal funcs
-	if (helsingPathLength <= 5)  {
-		removeMove(helsingPath[helsingPathLength - 1], validMoves, 
+	// note that paths are given in reverse order...
+	// so accessing them at index one gives the move in the path that
+	// is adjacent to drac's current loc
+	if (helsingPathLength <= 5 && helsingPathLength >= 2)  {
+		removeMove(helsingPath[1], validMoves, 
 			numValidMoves);
 	}
 	
-	if (sewardPathLength <= 5) {
-		removeMove(sewardPath[sewardPathLength - 1], validMoves, numValidMoves);
+	if (sewardPathLength <= 5 && sewardPathLength >= 2) {
+		removeMove(sewardPath[1], validMoves, numValidMoves);
 	}
 	
-	
-	if (godalmingPathLength <= 5) {
-		removeMove(godalmingPath[godalmingPathLength - 1], validMoves, 
+	if (godalmingPathLength <= 5 && godalmingPathLength >= 2) {
+		removeMove(godalmingPath[1], validMoves, 
 			numValidMoves);
 	}
 	
-	if (harkerPathLength <= 5) {
-		removeMove(harkerPath[harkerPathLength - 1], validMoves, numValidMoves);
+	if (harkerPathLength <= 5 && harkerPathLength >= 2) {
+		removeMove(harkerPath[1], validMoves, numValidMoves);
 	}
 	
+	makeRandomMove(dv, validMoves, numValidMoves);
+	if (canFreeHelsingPath) free(helsingPath);
+	if (canFreeHarkerPath) free(harkerPath);
+	if (canFreeSewardPath) free(sewardPath);
+	if (canFreeGodalmingPath) free(godalmingPath);
+}
+
+// take the fastest route to castle drac if possible...
+void goToCastleDrac(DraculaView dv, Map map, PlaceId *validMoves, 
+	int *numValidMoves, bool *moveMade) {
+	
+	PlaceId dracLoc = DvGetPlayerLocation(dv, PLAYER_DRACULA);
+	int pathLength = 0;
+	bool canFree = false;
+	PlaceId *path = findPathBFS(map, dracLoc, CASTLE_DRACULA, true, &pathLength,
+		&canFree);
+	// special cases...(probs not necessary, more for error checking)...
+	if (pathLength == 0) return;
+	// i actually don't think this can ever occur lol, but it's here in case...
+	if (pathLength == 1) {
+		int i = 0;
+		for (; i < *numValidMoves; i++) {
+			if (validMoves[i] == path[0]) {
+				char *play = (char *) placeIdToAbbrev(validMoves[i]);
+				registerBestPlay(play, "Mwahahahaha");
+				*moveMade = true;
+				break;
+			}
+		}
+	}
+	
+	// pathLength >= 2... is all other cases
+	if (pathLength >= 2) {
+		int i = 0;
+		for (; i < *numValidMoves; i++) {
+			if (validMoves[i] == path[1]) {
+				char *play = (char *) placeIdToAbbrev(validMoves[i]);
+				registerBestPlay(play, "Mwahahahaha");
+				*moveMade = true;
+				break;
+			}
+		}
+	}
+
+	if (canFree) free(path);
+	return;
 }
 
 
 // Utility functions
 
+// returns a path from src to dest in reverse order (i.e. starting with dest).
 PlaceId *findPathBFS(Map map, PlaceId src, PlaceId dest, bool getPath, 
     int *hops, bool *canFree)
 {
@@ -173,9 +236,12 @@ PlaceId *findPathBFS(Map map, PlaceId src, PlaceId dest, bool getPath,
             found = true;
         } else {
             ConnList edges = MapGetConnections(map, v);
-            while (edges != NULL && visited[edges->p] == -1) {
-                visited[edges->p] = v;
-                QueueEnqueue(q, edges->p);
+            while (edges != NULL) {
+                if (visited[edges->p] == -1) {
+                	visited[edges->p] = v;
+                	QueueEnqueue(q, edges->p);
+                }
+                edges = edges->next;
             }
         }
     }
@@ -187,6 +253,9 @@ PlaceId *findPathBFS(Map map, PlaceId src, PlaceId dest, bool getPath,
             current = visited[current];
             total++;
         }
+        // take care of last case..
+        total++;
+        
         *hops = total;
         if (getPath == true) {
             PlaceId *Path = malloc(sizeof(PlaceId)*(total));
