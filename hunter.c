@@ -92,12 +92,12 @@ void decideHunterMove(HunterView hv) {
    } else {
       char *name;
       PlaceId *path;
+      int count = 0;
+      int *pathLength = &count;
       switch(current) {
          case PLAYER_LORD_GODALMING:
          if (HvGetPlayerLocation(hv, PLAYER_LORD_GODALMING) == LIVERPOOL)
             makeRandomMove(hv);
-         int count = 0;
-         int *pathLength = &count;
          path = HvGetShortestPathTo(hv, current, LIVERPOOL, NULL);
          name = (char *)placeIdToAbbrev(path[0]);
          registerBestPlay(name, "Bleh");     
@@ -105,8 +105,6 @@ void decideHunterMove(HunterView hv) {
       case PLAYER_DR_SEWARD:
          if (HvGetPlayerLocation(hv, PLAYER_DR_SEWARD) == AMSTERDAM)
             makeRandomMove(hv);
-         int count = 0;
-         int *pathLength = &count;
          path = HvGetShortestPathTo(hv, current, AMSTERDAM, pathLength);
          name = (char *)placeIdToAbbrev(path[0]);
          registerBestPlay(name, "Yeet");
@@ -114,8 +112,6 @@ void decideHunterMove(HunterView hv) {
       case PLAYER_VAN_HELSING:
          if (HvGetPlayerLocation(hv, PLAYER_VAN_HELSING) == LEIPZIG) 
             makeRandomMove(hv);
-         int count = 0;
-         int *pathLength = &count;
          path = HvGetShortestPathTo(hv, current, LEIPZIG, NULL);
          name = (char *)placeIdToAbbrev(path[0]);
          registerBestPlay(name, "blEh");  
@@ -123,8 +119,6 @@ void decideHunterMove(HunterView hv) {
       case PLAYER_MINA_HARKER:
          if (HvGetPlayerLocation(hv, PLAYER_MINA_HARKER) == BUDAPEST) 
             makeRandomMove(hv);
-         int count = 0;
-         int *pathLength = &count;
          path = HvGetShortestPathTo(hv, current, BUDAPEST, NULL);
          name = (char *)placeIdToAbbrev(path[0]);
          registerBestPlay(name, "bleH");   
