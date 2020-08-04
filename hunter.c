@@ -65,7 +65,7 @@ void decideHunterMove(HunterView hv) {
    // This boolean is a one time use variable and so once changed, it stays
    // changed for the remainder of the game
    static bool scoutFinished = false;
-   static PlaceId latestFound;
+   static PlaceId latestFound = NOWHERE;
    static bool DracPlaceReached = false;
    int round = HvGetRound(hv);
 	Player current = HvGetPlayer(hv);
@@ -74,6 +74,7 @@ void decideHunterMove(HunterView hv) {
    int trail;
    int *trailpointer = &trail;
    DraculaLoc = HvGetLastKnownDraculaLocation(hv, trailpointer);
+   PlaceId place = HvGetPlayerLocation(hv, current);
    
    // If Drac trail found,
    if (DraculaLoc != NOWHERE) {
@@ -88,14 +89,12 @@ void decideHunterMove(HunterView hv) {
 
       // If the new Drac trail is different from past trail, make the new 
       // location the target
-      if (latestFound != DraculaLoc) {
+      if (latestFound != DraculaLoc) 
          DracPlaceReached = false;
-      }
       
       // If player reaches the last known location and no more trail is found,
       // Move randomly
-      PlaceId place = HvGetPlayerLocation(hv, current);
-      if (DracPlaceReached && latestFound == DraculaLoc) {
+      if (DracPlaceReached) {
          makeRandomMove(hv);
          latestFound = DraculaLoc;
          return;
@@ -103,7 +102,7 @@ void decideHunterMove(HunterView hv) {
 
       // TODO: Reject new move if two hunters in the same city. Use messages
 
-      // Else, go towards the last location
+      // Else, go towards the last known Drac location
       int distance;
       int *pathLength = &distance;
       PlaceId *path = HvGetShortestPathTo(hv, current, DraculaLoc, pathLength);
