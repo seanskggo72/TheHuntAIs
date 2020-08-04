@@ -1,0 +1,3 @@
+#!/bin/bash
+
+code hunter.c HunterView.h player.c Places.h Game.h

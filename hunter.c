@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "hunter.h"
 #include "HunterView.h"
@@ -51,17 +52,41 @@ void makeRandomMove(HunterView hv);
 // found, then move towards the most recent location. Else, randomly 
 // wander about until the Dracula is found again.
 
+// Version 2 - The huunters scout and if Dracula path is not found, then
+// hunters move about randomly until found.
+// If hunter's health falls critically low, then the hunter
+// rests for that turn
+
+// Version 3 (upcoming) - No two hunters can be in the same city.
+
 void decideHunterMove(HunterView hv) {
    
+   // Static boolean to see whether initial scouting is finished
+   // This boolean is a one time use variable and so once changed, it stays
+   // changed for the remainder of the game
+   static bool scoutFinished = false;
    int round = HvGetRound(hv);
 	Player current = HvGetPlayer(hv);
+   int health = HvGetHealth(hv, current);
 
    // If Dracula or trail found, go towards that direction
    PlaceId DraculaLoc;
    int trail;
    int *trailpointer = &trail;
+
    DraculaLoc = HvGetLastKnownDraculaLocation(hv, trailpointer);
+   
    if (DraculaLoc != NOWHERE) {
+      
+      if (health <= 3) {
+         PlaceId place = HvGetPlayerLocation(hv, current);
+         char *name = (char *)placeIdToAbbrev(place);
+         registerBestPlay(name, "Resting");
+         return;
+      }
+
+      // Reject new move if two hunters in the same city. Use messages
+
       int distance;
       int *pathLength = &distance;
       PlaceId *path = HvGetShortestPathTo(hv, current, DraculaLoc, pathLength);
@@ -71,57 +96,86 @@ void decideHunterMove(HunterView hv) {
       return;
    }
 
+   // If two hunters in same city, 
+
+   // If hunter health is critically low
+   if (health <= 3) {
+      PlaceId place = HvGetPlayerLocation(hv, current);
+      char *name = (char *)placeIdToAbbrev(place);
+      registerBestPlay(name, "Resting");
+      return;
+   }
+
+
+   // If scouting finished, and Dracula trail is NOT found, move randomly 
+   if (scoutFinished == true) {
+      makeRandomMove(hv);
+      return;
+   }
+
    // initial path of hunters
    if (round == 0) {
       switch(current) {
          case PLAYER_LORD_GODALMING:
-         registerBestPlay("SR", "Bleh");     
+         registerBestPlay("SR", "First move");     
          return;
       case PLAYER_DR_SEWARD:
-         registerBestPlay("MR", "bLeh");
+         registerBestPlay("MR", "First move");
          return;
       case PLAYER_VAN_HELSING:
-         registerBestPlay("NP", "blEh");  
+         registerBestPlay("NP", "First move");  
          return;
       case PLAYER_MINA_HARKER:
-         registerBestPlay("AT", "bleH");   
+         registerBestPlay("AT", "First move");   
          return;
       case PLAYER_DRACULA:
          return;
       }
-   } else {
+   } else { 
       char *name;
       PlaceId *path;
       int count = 0;
       int *pathLength = &count;
       switch(current) {
          case PLAYER_LORD_GODALMING:
-         if (HvGetPlayerLocation(hv, PLAYER_LORD_GODALMING) == LIVERPOOL)
+         if (HvGetPlayerLocation(hv, PLAYER_LORD_GODALMING) == LIVERPOOL){
             makeRandomMove(hv);
-         path = HvGetShortestPathTo(hv, current, LIVERPOOL, NULL);
+            scoutFinished = true;
+            return;
+         }
+         path = HvGetShortestPathTo(hv, current, LIVERPOOL, pathLength);
          name = (char *)placeIdToAbbrev(path[0]);
-         registerBestPlay(name, "Bleh");     
+         registerBestPlay(name, "Scouting");     
          return;
       case PLAYER_DR_SEWARD:
-         if (HvGetPlayerLocation(hv, PLAYER_DR_SEWARD) == AMSTERDAM)
+         if (HvGetPlayerLocation(hv, PLAYER_DR_SEWARD) == AMSTERDAM) {
             makeRandomMove(hv);
+            scoutFinished = true;
+            return;
+         }
          path = HvGetShortestPathTo(hv, current, AMSTERDAM, pathLength);
          name = (char *)placeIdToAbbrev(path[0]);
-         registerBestPlay(name, "Yeet");
+         registerBestPlay(name, "Scouting");
          return;
       case PLAYER_VAN_HELSING:
-         if (HvGetPlayerLocation(hv, PLAYER_VAN_HELSING) == LEIPZIG) 
+         if (HvGetPlayerLocation(hv, PLAYER_VAN_HELSING) == LEIPZIG) {
             makeRandomMove(hv);
-         path = HvGetShortestPathTo(hv, current, LEIPZIG, NULL);
+            scoutFinished = true;
+            return;
+         }
+         path = HvGetShortestPathTo(hv, current, LEIPZIG, pathLength);
          name = (char *)placeIdToAbbrev(path[0]);
-         registerBestPlay(name, "blEh");  
+         registerBestPlay(name, "Scouting");  
          return;
       case PLAYER_MINA_HARKER:
-         if (HvGetPlayerLocation(hv, PLAYER_MINA_HARKER) == BUDAPEST) 
+         if (HvGetPlayerLocation(hv, PLAYER_MINA_HARKER) == BUDAPEST) {
             makeRandomMove(hv);
-         path = HvGetShortestPathTo(hv, current, BUDAPEST, NULL);
+            scoutFinished = true;
+            return;
+         }
+         path = HvGetShortestPathTo(hv, current, BUDAPEST, pathLength);
          name = (char *)placeIdToAbbrev(path[0]);
-         registerBestPlay(name, "bleH");   
+         registerBestPlay(name, "Scouting");   
          return;
       case PLAYER_DRACULA:
          return;
@@ -141,6 +195,7 @@ char *createMessage(int distance) {
    else return "Nothing new";
 }
 
+// Updated: Make random move without clashing of location with other hunters
 void makeRandomMove(HunterView hv) {
    int numValidMoves;
    int *numReturnedLocs = &numValidMoves;
@@ -160,33 +215,5 @@ void makeRandomMove(HunterView hv) {
 //------------------------- Backup Functions ---------------------------//
 
 /*
-
-// Random move generator 
-void makeRandomMove(HunterView hv, PlaceId *validMoves, int numValidMoves) 
-{
-	// Use time function to get random seed
-	unsigned int seed = (unsigned int) time(NULL);
-	srand(seed);
-	int randomIndex = rand() % numValidMoves;
-	char *play = (char *) placeIdToAbbrev(validMoves[randomIndex]);
-	registerBestPlay(play, "YOLO");
-	return; 
-}
-
-void randomMove(HunterView hv) {
-   int places;
-   int *numReturnedLocs = &places;
-   PlaceId *options = HvWhereCanIGo(hv, numReturnedLocs);
-   int random = rand();
-   printf("%d\n", places);
-   if (places == 0) {
-      random = 0;
-   } else {
-      random = random % places;
-   }
-   printf("%d", random);
-   char *name = (char *)placeIdToAbbrev(options[random]);
-   registerBestPlay(name, "Random Move");
-}
 
 */
