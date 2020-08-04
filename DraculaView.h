@@ -20,6 +20,7 @@
 
 #include "Game.h"
 #include "Places.h"
+#include "Map.h"
 
 typedef struct draculaView *DraculaView;
 
@@ -100,6 +101,12 @@ PlaceId DvGetVampireLocation(DraculaView dv);
  * traps in that location. The locations can be in any order.
  */
 PlaceId *DvGetTrapLocations(DraculaView dv, int *numTraps);
+
+/**
+ * Returns the Map 
+ * Map should not be altered in ANY WAY by the caller AI
+ */
+Map DvGetMap(DraculaView dv);
 
 ////////////////////////////////////////////////////////////////////////
 // Making a Move
