@@ -65,38 +65,56 @@ void decideHunterMove(HunterView hv) {
    // This boolean is a one time use variable and so once changed, it stays
    // changed for the remainder of the game
    static bool scoutFinished = false;
+   static PlaceId latestFound;
+   static bool DracPlaceReached = false;
    int round = HvGetRound(hv);
 	Player current = HvGetPlayer(hv);
    int health = HvGetHealth(hv, current);
-
-   // If Dracula or trail found, go towards that direction
    PlaceId DraculaLoc;
    int trail;
    int *trailpointer = &trail;
-
    DraculaLoc = HvGetLastKnownDraculaLocation(hv, trailpointer);
    
+   // If Drac trail found,
    if (DraculaLoc != NOWHERE) {
-      
+
+      // If player health is critically low, rest for the turn
       if (health <= 3) {
-         PlaceId place = HvGetPlayerLocation(hv, current);
          char *name = (char *)placeIdToAbbrev(place);
          registerBestPlay(name, "Resting");
+         latestFound = DraculaLoc;
          return;
       }
 
-      // Reject new move if two hunters in the same city. Use messages
+      // If the new Drac trail is different from past trail, make the new 
+      // location the target
+      if (latestFound != DraculaLoc) {
+         DracPlaceReached = false;
+      }
+      
+      // If player reaches the last known location and no more trail is found,
+      // Move randomly
+      PlaceId place = HvGetPlayerLocation(hv, current);
+      if (DracPlaceReached && latestFound == DraculaLoc) {
+         makeRandomMove(hv);
+         latestFound = DraculaLoc;
+         return;
+      }
 
+      // TODO: Reject new move if two hunters in the same city. Use messages
+
+      // Else, go towards the last location
       int distance;
       int *pathLength = &distance;
       PlaceId *path = HvGetShortestPathTo(hv, current, DraculaLoc, pathLength);
       char *name = (char *)placeIdToAbbrev(path[0]);
       char *message = createMessage(distance);
       registerBestPlay(name, message);
+      latestFound = DraculaLoc;
       return;
    }
 
-   // If two hunters in same city, 
+   // TODO: If two hunters in same city, change to new move
 
    // If hunter health is critically low
    if (health <= 3) {
@@ -106,9 +124,8 @@ void decideHunterMove(HunterView hv) {
       return;
    }
 
-
    // If scouting finished, and Dracula trail is NOT found, move randomly 
-   if (scoutFinished == true) {
+   if (scoutFinished) {
       makeRandomMove(hv);
       return;
    }
