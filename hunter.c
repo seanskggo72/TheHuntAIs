@@ -221,7 +221,8 @@ void makeRandomMove(HunterView hv) {
    PlaceId *validMoves = HvWhereCanIGo(hv, numReturnedLocs);
    unsigned int seed = (unsigned int)time(NULL);
 	srand(seed);
-   if (numValidMoves == 0) {
+   int round = HvGetRound(hv);
+   if (numValidMoves == 0 && round != 0) {
       printf("No legal moves for hunter\n");
       exit(EXIT_FAILURE);
    } else {
