@@ -61,8 +61,6 @@ void makeRandomMove(HunterView hv);
 
 void decideHunterMove(HunterView hv) {
    
-   // Just in case no valid move is made, make a random move as backup move
-   makeRandomMove(hv);
 
    // Static boolean to see whether initial scouting is finished
    // This boolean is a one time use variable and so once changed, it stays
@@ -79,6 +77,10 @@ void decideHunterMove(HunterView hv) {
    DraculaLoc = HvGetLastKnownDraculaLocation(hv, trailpointer);
    PlaceId place = HvGetPlayerLocation(hv, current);
    
+   // Just in case no valid move is made, make a random move as backup move
+   if (round != 0)
+      makeRandomMove(hv);
+
    // If Drac trail found,
    if (DraculaLoc != NOWHERE) {
 
@@ -221,8 +223,7 @@ void makeRandomMove(HunterView hv) {
    PlaceId *validMoves = HvWhereCanIGo(hv, numReturnedLocs);
    unsigned int seed = (unsigned int)time(NULL);
 	srand(seed);
-   int round = HvGetRound(hv);
-   if (numValidMoves == 0 && round != 0) {
+   if (numValidMoves == 0) {
       printf("No legal moves for hunter\n");
       exit(EXIT_FAILURE);
    } else {
