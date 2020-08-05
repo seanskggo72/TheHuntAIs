@@ -521,9 +521,6 @@ PlaceId *GvGetTrapLocations(GameView gv, int *numTraps)
 	return trapLocations;
 }
 
-Map GvGetMap(GameView gv) {
-	return gv->map;
-}
 ////////////////////////////////////////////////////////////////////////
 // Game History
 
@@ -588,6 +585,11 @@ PlaceId *GvGetLastLocations(GameView gv, Player player, int numLocs,
 		*canFree = false;
 		return &gv->moveHistory[player][numMovesMade - *numReturnedLocs];
 	}
+}
+
+Map GvGetMap(GameView gv) 
+{
+	return gv->map;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -685,6 +687,7 @@ static int max(int num1, int num2) {
 static int min(int num1, int num2) {
 	return (num1 < num2 ? num1 : num2);
 }
+
 
 ////////////////////////////////////////////////////////////////////////
 // Your own interface functions
