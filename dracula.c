@@ -55,6 +55,7 @@ void decideDraculaMove(DraculaView dv)
 	// Random first move with slight error checking
 	if (numValidMoves == 0) {
 		registerBestPlay("TP", "Mwahahahaha");
+		return;
 	} else {
 		makeRandomMove(dv, validMoves, &numValidMoves);
 	}
