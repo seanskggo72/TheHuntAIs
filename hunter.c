@@ -61,6 +61,9 @@ void makeRandomMove(HunterView hv);
 
 void decideHunterMove(HunterView hv) {
    
+   // Just in case no valid move is made, make a random move as backup move
+   makeRandomMove(hv);
+
    // Static boolean to see whether initial scouting is finished
    // This boolean is a one time use variable and so once changed, it stays
    // changed for the remainder of the game
