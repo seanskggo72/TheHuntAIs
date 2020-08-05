@@ -61,7 +61,6 @@ void makeRandomMove(HunterView hv);
 
 void decideHunterMove(HunterView hv) {
    
-
    // Static boolean to see whether initial scouting is finished
    // This boolean is a one time use variable and so once changed, it stays
    // changed for the remainder of the game
@@ -97,25 +96,26 @@ void decideHunterMove(HunterView hv) {
       if (latestFound != DraculaLoc) 
          DracPlaceReached = false;
       
-      // If player reaches the last known location and no more trail is found,
-      // Move randomly
-      if (DracPlaceReached) {
-         makeRandomMove(hv);
-         latestFound = DraculaLoc;
-         return;
-      }
-
       // TODO: Reject new move if two hunters in the same city. Use messages
 
       // Else, go towards the last known Drac location
       int distance;
       int *pathLength = &distance;
       PlaceId *path = HvGetShortestPathTo(hv, current, DraculaLoc, pathLength);
-      char *name = (char *)placeIdToAbbrev(path[0]);
-      char *message = createMessage(distance);
-      registerBestPlay(name, message);
-      latestFound = DraculaLoc;
-      return;
+      if (distance == 0) DracPlaceReached = true;
+      // If player reaches the last known location and no more trail is found,
+      // Move randomly
+      if (DracPlaceReached) {
+         makeRandomMove(hv);
+         latestFound = DraculaLoc;
+         return;
+      } else {
+         char *name = (char *)placeIdToAbbrev(path[0]);
+         char *message = createMessage(distance);
+         registerBestPlay(name, message);
+         latestFound = DraculaLoc;
+         return;
+      }
    }
 
    // TODO: If two hunters in same city, change to new move
@@ -208,12 +208,13 @@ void decideHunterMove(HunterView hv) {
 //---------------------- Local Functions ------------------------//
 
 char *createMessage(int distance) {
-   if (distance == 1) return "Distance of 1";
+   if (distance == 0) return "I'm at the target";
+   else if (distance == 1) return "Distance of 1";
    else if (distance == 2) return "Distance of 2";
    else if (distance == 3) return "Distance of 3";
    else if (distance == 4) return "Distance of 4";
    else if (distance == 5) return "Distance of 5";
-   else return "Nothing new";
+   else return "Target far away";
 }
 
 // Updated: Make random move without clashing of location with other hunters
