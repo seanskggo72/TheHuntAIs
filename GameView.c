@@ -187,10 +187,10 @@ static Turn playToTurn(char *play) {
 	turn.move = placeAbbrevToId((char[3]){ play[1], play[2], '\0' });
 	
 	if (turn.player == PLAYER_DRACULA) {
-		if (play[3] == 'T') turn.actions[turn.numActions++] = PLACED_TRAP;
-		if (play[4] == 'V') turn.actions[turn.numActions++] = PLACED_VAMPIRE;
-		if (play[5] == 'M') turn.actions[turn.numActions++] = TRAP_MALFUNCTIONED;
 		if (play[5] == 'V') turn.actions[turn.numActions++] = VAMPIRE_MATURED;
+		if (play[5] == 'M') turn.actions[turn.numActions++] = TRAP_MALFUNCTIONED;
+		if (play[4] == 'V') turn.actions[turn.numActions++] = PLACED_VAMPIRE;
+		if (play[3] == 'T') turn.actions[turn.numActions++] = PLACED_TRAP;
 	} else {
 		for (int i = 3; i < 7; i++) {
 			switch (play[i]) {
@@ -521,9 +521,6 @@ PlaceId *GvGetTrapLocations(GameView gv, int *numTraps)
 	return trapLocations;
 }
 
-Map GvGetMap(GameView gv) {
-	return gv->map;
-}
 ////////////////////////////////////////////////////////////////////////
 // Game History
 
@@ -588,6 +585,11 @@ PlaceId *GvGetLastLocations(GameView gv, Player player, int numLocs,
 		*canFree = false;
 		return &gv->moveHistory[player][numMovesMade - *numReturnedLocs];
 	}
+}
+
+Map GvGetMap(GameView gv) 
+{
+	return gv->map;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -685,6 +687,7 @@ static int max(int num1, int num2) {
 static int min(int num1, int num2) {
 	return (num1 < num2 ? num1 : num2);
 }
+
 
 ////////////////////////////////////////////////////////////////////////
 // Your own interface functions
