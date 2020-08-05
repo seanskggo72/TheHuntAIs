@@ -29,13 +29,16 @@ void rmMovesInEndOfDirectPlayerPath(DraculaView dv, Map map,
 	PlaceId *validMoves, int *numValidMoves);
 void goToCastleDrac(DraculaView dv, Map map, PlaceId *validMoves, 
 	int *numValidMoves, bool *moveMade);
+void checkIfHide(DraculaView dv, Map map, PlaceId *validMoves, 
+    int *numValidMoves);
 	
 // Local utility functions
 PlaceId *findPathBFS(Map map, PlaceId src, PlaceId dest, bool getPath, 
     int *hops, bool *canFree);
 int PlayerToDrac(Map map, DraculaView dv, Player player, PlaceId DracLoc);
-Player FindClosestPlayer(DraculaView dv, Map map);
+Player FindClosestPlayer(DraculaView dv, Map map, int *distance);
 void removeMove(PlaceId move, PlaceId *validMoves, int *numValidMoves);
+bool isValidMove(PlaceId move, PlaceId *validMoves, int *numValidMoves) ;
 //
 
 void decideDraculaMove(DraculaView dv)
@@ -48,10 +51,10 @@ void decideDraculaMove(DraculaView dv)
 	int numValidMoves = 0;
 	PlaceId *validMoves = DvGetValidMoves(dv, &numValidMoves);
 	
+	
 	// Random first move with slight error checking
 	if (numValidMoves == 0) {
 		registerBestPlay("TP", "Mwahahahaha");
-		return;
 	} else {
 		makeRandomMove(dv, validMoves, &numValidMoves);
 	}
@@ -77,7 +80,7 @@ void decideDraculaMove(DraculaView dv)
 	makeRandomMove(dv, validMoves, &numValidMoves);
 	
 	// if all hunters are nearby, hide?
-	//checkIfHide();
+	checkIfHide(dv, map, validMoves, &numValidMoves);
 	
 	free(validMoves);
 	
@@ -277,7 +280,7 @@ PlaceId *findPathBFS(Map map, PlaceId src, PlaceId dest, bool getPath,
         return NULL;
     }
 }
-Player FindClosestPlayer(DraculaView dv, Map map)
+Player FindClosestPlayer(DraculaView dv, Map map, int *distance)
 {   
     PlaceId DracLoc = DvGetPlayerLocation(dv, PLAYER_DRACULA);
     int PlayerToDracLoc[4];
@@ -290,6 +293,7 @@ Player FindClosestPlayer(DraculaView dv, Map map)
     for (int i = 0; i < HUNTER_NUM; i++) {
         if (PlayerToDracLoc[i] < minimum) {
             minimum = PlayerToDracLoc[i];
+            *distance = minimum;
             closest = i;        
         }
     }
@@ -330,4 +334,29 @@ void removeMove(PlaceId move, PlaceId *validMoves, int *numValidMoves)
 	}
 	
 	return; 
+}
+
+void checkIfHide(DraculaView dv, Map map, PlaceId *validMoves, 
+    int *numValidMoves)
+{
+    if (isValidMove(HIDE, validMoves, numValidMoves) == true) {
+        int distance = 0;
+        FindClosestPlayer(dv, map, &distance);
+        if (distance == 1) {
+            registerBestPlay("HI", "BLEHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH");
+        }
+    } else {
+        return;
+    }
+}
+
+bool isValidMove(PlaceId move, PlaceId *validMoves, int *numValidMoves) 
+{
+	int i = 0;
+	for (; i < *numValidMoves; i++) {
+		if (validMoves[i] == move) {
+			return true;
+		}
+	}
+    return false;
 }
