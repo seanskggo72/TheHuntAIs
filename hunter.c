@@ -171,6 +171,14 @@ void decideHunterMove(HunterView hv) {
       return;
    }
 
+   // If round is 7 and the hunters have not found a Drac trail, perform
+   // research to find the trail
+   if (round == 7) {
+      char *play = (char *)placeIdToAbbrev(place);
+      registerBestPlay(play, "Collective Research");
+      return;
+   }
+
    // If scouting finished, and Dracula trail is NOT found, move randomly 
    if (current == PLAYER_LORD_GODALMING) {
       if (GplaceReached) {
