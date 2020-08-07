@@ -62,15 +62,20 @@ void makeRandomMove(HunterView hv);
 void decideHunterMove(HunterView hv) {
    
    // Static variables to check certain conditions are met
-   static bool scoutFinished = false;
    static bool DracPlaceReached = false;
    static PlaceId latestFound = NOWHERE;
 
    // Player target locations
    static PlaceId godalming = LIVERPOOL;
    static PlaceId seward = AMSTERDAM;
-   static PlaceId helsing = LEIPZIG;
+   static PlaceId vanHelsing = LEIPZIG;
    static PlaceId harker = BUDAPEST;
+
+   // Player scouting status
+   static bool GscoutFinished = false;
+   static bool SscoutFinished = false;
+   static bool VscoutFinished = false;
+   static bool HscoutFinished = false;
    
    // Other important variables initialised
 	Player current = HvGetPlayer(hv);
@@ -127,9 +132,16 @@ void decideHunterMove(HunterView hv) {
    PlaceId vampLoc = HvGetVampireLocation(hv);
    if (vampLoc != NOWHERE && vampLoc != CITY_UNKNOWN) {
       int length = 0;
-      PlaceId *temp = HvGetShortestPathTo(hv, current, vampLoc, &length);
+      HvGetShortestPathTo(hv, current, vampLoc, &length);
       if (length < 6) {
-         
+         if (current == PLAYER_LORD_GODALMING) 
+            godalming = vampLoc;
+         else if (current == PLAYER_DR_SEWARD)
+            seward = vampLoc;
+         else if (current == PLAYER_VAN_HELSING)
+            vanHelsing = vampLoc;
+         else if (current == PLAYER_MINA_HARKER) 
+            harker = vampLoc;
       }
    }
 
@@ -142,11 +154,20 @@ void decideHunterMove(HunterView hv) {
    }
 
    // If scouting finished, and Dracula trail is NOT found, move randomly 
-   if (scoutFinished) {
-      makeRandomMove(hv);
+   if (current == PLAYER_LORD_GODALMING) {
+      if (GscoutFinished) makeRandomMove(hv);
+      return;
+   } else if (current == PLAYER_DR_SEWARD) {
+      if (SscoutFinished) makeRandomMove(hv);
+      return;
+   }  else if (current == PLAYER_VAN_HELSING) {
+      if (VscoutFinished) makeRandomMove(hv);
+      return;
+   } else if (current == PLAYER_MINA_HARKER) {
+      if (HscoutFinished) makeRandomMove(hv);
       return;
    }
-
+   
    // initial path of hunters
    if (round == 0) {
       switch(current) {
@@ -173,40 +194,40 @@ void decideHunterMove(HunterView hv) {
          case PLAYER_LORD_GODALMING:
          if (HvGetPlayerLocation(hv, PLAYER_LORD_GODALMING) == godalming){
             makeRandomMove(hv);
-            scoutFinished = true;
+            GscoutFinished = true;
             return;
          }
-         path = HvGetShortestPathTo(hv, current, LIVERPOOL, &pathLength);
+         path = HvGetShortestPathTo(hv, current, godalming, &pathLength);
          name = (char *)placeIdToAbbrev(path[0]);
          registerBestPlay(name, "Scouting");     
          return;
       case PLAYER_DR_SEWARD:
          if (HvGetPlayerLocation(hv, PLAYER_DR_SEWARD) == seward) {
             makeRandomMove(hv);
-            scoutFinished = true;
+            SscoutFinished = true;
             return;
          }
-         path = HvGetShortestPathTo(hv, current, AMSTERDAM, &pathLength);
+         path = HvGetShortestPathTo(hv, current, seward, &pathLength);
          name = (char *)placeIdToAbbrev(path[0]);
          registerBestPlay(name, "Scouting");
          return;
       case PLAYER_VAN_HELSING:
-         if (HvGetPlayerLocation(hv, PLAYER_VAN_HELSING) == helsing) {
+         if (HvGetPlayerLocation(hv, PLAYER_VAN_HELSING) == vanHelsing) {
             makeRandomMove(hv);
-            scoutFinished = true;
+            VscoutFinished = true;
             return;
          }
-         path = HvGetShortestPathTo(hv, current, LEIPZIG, &pathLength);
+         path = HvGetShortestPathTo(hv, current, vanHelsing, &pathLength);
          name = (char *)placeIdToAbbrev(path[0]);
          registerBestPlay(name, "Scouting");  
          return;
       case PLAYER_MINA_HARKER:
          if (HvGetPlayerLocation(hv, PLAYER_MINA_HARKER) == harker) {
             makeRandomMove(hv);
-            scoutFinished = true;
+            HscoutFinished = true;
             return;
          }
-         path = HvGetShortestPathTo(hv, current, BUDAPEST, &pathLength);
+         path = HvGetShortestPathTo(hv, current, harker, &pathLength);
          name = (char *)placeIdToAbbrev(path[0]);
          registerBestPlay(name, "Scouting");   
          return;
