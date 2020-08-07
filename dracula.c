@@ -22,6 +22,9 @@
 #include "Queue.h"
 
 #define HUNTER_NUM 4
+#define LOW_HEALTH 12
+#define VERY_LOW_HEALTH 4
+
 // Local "movement" related functions
 void doFirstMove(DraculaView dv);
 void makeRandomMove(DraculaView dv, PlaceId *validMoves, int *numValidMoves);
@@ -33,6 +36,8 @@ void checkIfHide(DraculaView dv, Map map, PlaceId *validMoves,
     int *numValidMoves);
 void moveAwayFromClosestHunter(DraculaView dv, Map map, PlaceId *validMoves, 
     int *numValidMoves);
+void removeSeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves, 
+    Map map, bool *madeMove);
     
 // Local utility functions
 PlaceId *findPathBFS(Map map, PlaceId src, PlaceId dest, bool getPath, 
@@ -40,7 +45,8 @@ PlaceId *findPathBFS(Map map, PlaceId src, PlaceId dest, bool getPath,
 int PlayerToDrac(Map map, DraculaView dv, Player player, PlaceId DracLoc);
 Player FindClosestPlayer(DraculaView dv, Map map, int *distance);
 void removeMove(PlaceId move, PlaceId *validMoves, int *numValidMoves);
-bool isValidMove(PlaceId move, PlaceId *validMoves, int *numValidMoves) ;
+bool isValidMove(PlaceId move, PlaceId *validMoves, int *numValidMoves);
+bool isDracOnMainland(DraculaView dv, Map map);
 //
 
 void decideDraculaMove(DraculaView dv)
@@ -347,7 +353,7 @@ void checkIfHide(DraculaView dv, Map map, PlaceId *validMoves,
         int distance = 0;
         FindClosestPlayer(dv, map, &distance);
         if (distance == 1) {
-            registerBestPlay("HI", "BLEHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH");
+            registerBestPlay("HI", "Can't catch me!");
         }
     } else {
         return;
@@ -387,5 +393,47 @@ void moveAwayFromClosestHunter(DraculaView dv, Map map, PlaceId *validMoves, int
 			distance = hops;
         }
         if (canFree) free(path);
+    }
+}
+
+bool isDracOnMainland(DraculaView dv, Map map)
+{
+    PlaceId DracLocation = DvGetPlayerLocation(dv, PLAYER_DRACULA);
+    if (DracLocation == LONDON || DracLocation == PLYMOUTH || 
+        DracLocation == SWANSEA || DracLocation == LIVERPOOL || 
+        DracLocation == MANCHESTER || DracLocation == EDINBURGH || 
+        DracLocation == DUBLIN || DracLocation == GALWAY) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+void removeSeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves, Map
+     map, bool *madeMove)
+{
+    int DracHealth = DvGetHealth(dv, PLAYER_DRACULA);
+    // if health is <= VERY_LOW_HEALTH and on great britain, remain on 
+    // land no matter what
+    if (DracHealth <= VERY_LOW_HEALTH && isDracOnMainland(dv, map) == false) {
+        int i = 0;
+        for (; i < *numValidMoves; i++) {
+            if (placeIdToType(validMoves[i]) == SEA) {
+                removeMove(validMoves[i], validMoves, numValidMoves);
+            }
+        }
+    } else if (DracHealth <= LOW_HEALTH && isDracOnMainland(dv, map) == false) {
+        // if health is <LOW_HEALTH and on great britain, take shortest route 
+        // to mainland
+        
+        
+    } else if (DracHealth <= LOW_HEALTH && isDracOnMainland(dv, map) == true) {
+        // if health is <= LOW_HEALTH and on mainland do not go to sea
+        int i = 0;
+        for (; i < *numValidMoves; i++) {
+            if (placeIdToType(validMoves[i]) == SEA) {
+                removeMove(validMoves[i], validMoves, numValidMoves);
+            }
+        }        
     }
 }
