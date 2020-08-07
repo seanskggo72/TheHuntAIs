@@ -42,8 +42,10 @@ typedef struct hunter {
 
 //---------------------- Local Functions ------------------------//
 
-char *createMessage(int distance);
-void makeRandomMove(HunterView hv);
+static char *createMessage(int distance);
+static void makeRandomMove(HunterView hv);
+static void initialPlay(Player current);
+static bool defaultPlayerMove(HunterView hv, Player current, PlaceId place);
 
 //---------------------------------------------------------------//
 
@@ -170,77 +172,27 @@ void decideHunterMove(HunterView hv) {
    
    // initial path of hunters
    if (round == 0) {
-      switch(current) {
-         case PLAYER_LORD_GODALMING:
-         registerBestPlay("SR", "First move");     
-         return;
-      case PLAYER_DR_SEWARD:
-         registerBestPlay("MR", "First move");
-         return;
-      case PLAYER_VAN_HELSING:
-         registerBestPlay("NP", "First move");  
-         return;
-      case PLAYER_MINA_HARKER:
-         registerBestPlay("AT", "First move");   
-         return;
-      case PLAYER_DRACULA:
-         return;
-      }
+      initialPlay(current);
+      return;
    } else { 
-      char *name;
-      PlaceId *path;
-      int pathLength = 0;
       switch(current) {
          case PLAYER_LORD_GODALMING:
-         if (HvGetPlayerLocation(hv, PLAYER_LORD_GODALMING) == godalming){
-            makeRandomMove(hv);
-            GscoutFinished = true;
-            return;
-         }
-         path = HvGetShortestPathTo(hv, current, godalming, &pathLength);
-         name = (char *)placeIdToAbbrev(path[0]);
-         registerBestPlay(name, "Scouting");     
-         return;
-      case PLAYER_DR_SEWARD:
-         if (HvGetPlayerLocation(hv, PLAYER_DR_SEWARD) == seward) {
-            makeRandomMove(hv);
-            SscoutFinished = true;
-            return;
-         }
-         path = HvGetShortestPathTo(hv, current, seward, &pathLength);
-         name = (char *)placeIdToAbbrev(path[0]);
-         registerBestPlay(name, "Scouting");
-         return;
-      case PLAYER_VAN_HELSING:
-         if (HvGetPlayerLocation(hv, PLAYER_VAN_HELSING) == vanHelsing) {
-            makeRandomMove(hv);
-            VscoutFinished = true;
-            return;
-         }
-         path = HvGetShortestPathTo(hv, current, vanHelsing, &pathLength);
-         name = (char *)placeIdToAbbrev(path[0]);
-         registerBestPlay(name, "Scouting");  
-         return;
-      case PLAYER_MINA_HARKER:
-         if (HvGetPlayerLocation(hv, PLAYER_MINA_HARKER) == harker) {
-            makeRandomMove(hv);
-            HscoutFinished = true;
-            return;
-         }
-         path = HvGetShortestPathTo(hv, current, harker, &pathLength);
-         name = (char *)placeIdToAbbrev(path[0]);
-         registerBestPlay(name, "Scouting");   
-         return;
-      case PLAYER_DRACULA:
-         return;
-      }
+            GscoutFinished = defaultPlayerMove(hv, current, godalming);
+         case PLAYER_DR_SEWARD:
+            SscoutFinished = defaultPlayerMove(hv, current, seward);
+         case PLAYER_VAN_HELSING:
+            VscoutFinished = defaultPlayerMove(hv, current, vanHelsing);
+         case PLAYER_MINA_HARKER:
+            HscoutFinished = defaultPlayerMove(hv, current, harker);
+         case PLAYER_DRACULA: break;
+      } 
       return;
    }
 }	
 
 //---------------------- Local Functions ------------------------//
 
-char *createMessage(int distance) {
+static char *createMessage(int distance) {
    if (distance == 0) return "I'm at the target";
    else if (distance == 1) return "Distance of 1";
    else if (distance == 2) return "Distance of 2";
@@ -251,7 +203,7 @@ char *createMessage(int distance) {
 }
 
 // Updated: Make random move without clashing of location with other hunters
-void makeRandomMove(HunterView hv) {
+static void makeRandomMove(HunterView hv) {
    int numValidMoves;
    int *numReturnedLocs = &numValidMoves;
    PlaceId *validMoves = HvWhereCanIGo(hv, numReturnedLocs);
@@ -265,6 +217,32 @@ void makeRandomMove(HunterView hv) {
       char *play = (char *)placeIdToAbbrev(validMoves[randomIndex]);
 	   registerBestPlay(play, "Random move");
    }
+}
+
+static void initialPlay(Player current) {
+   switch(current) {
+      case PLAYER_LORD_GODALMING:
+         registerBestPlay("SR", "First move");     
+      case PLAYER_DR_SEWARD:
+         registerBestPlay("MR", "First move");
+      case PLAYER_VAN_HELSING:
+         registerBestPlay("NP", "First move");  
+      case PLAYER_MINA_HARKER:
+         registerBestPlay("AT", "First move");   
+      case PLAYER_DRACULA: break;
+   }
+}
+
+static bool defaultPlayerMove(HunterView hv, Player current, PlaceId place) {
+   int pathLength = 0;
+   if (HvGetPlayerLocation(hv, PLAYER_LORD_GODALMING) == place) {
+      makeRandomMove(hv);
+      return true;
+   }
+   PlaceId *path = HvGetShortestPathTo(hv, current, place, &pathLength);
+   char *name = (char *)placeIdToAbbrev(path[0]);
+   registerBestPlay(name, "Scouting/heading in direction");     
+   return false;
 }
 
 //------------------------- Backup Functions ---------------------------//
