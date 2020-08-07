@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
 // COMP2521 20T2 ... the Fury of Dracula
 // dracula.c: your "Fury of Dracula" Dracula AI
 //
@@ -31,7 +31,9 @@ void goToCastleDrac(DraculaView dv, Map map, PlaceId *validMoves,
 	int *numValidMoves, bool *moveMade);
 void checkIfHide(DraculaView dv, Map map, PlaceId *validMoves, 
     int *numValidMoves);
-	
+void moveAwayFromClosestHunter(DraculaView dv, Map map, PlaceId *validMoves, 
+    int *numValidMoves);
+    
 // Local utility functions
 PlaceId *findPathBFS(Map map, PlaceId src, PlaceId dest, bool getPath, 
     int *hops, bool *canFree);
@@ -74,18 +76,18 @@ void decideDraculaMove(DraculaView dv)
 		if (moveMade) return;
 	}
 	
+	// if all hunters are nearby, hide.
+	checkIfHide(dv, map, validMoves, &numValidMoves);
+	
 	// If the current bestPlay is in the shortest path of a player to drac,
 	// remove it from validMoves and suggest another?
 	
 	rmMovesInEndOfDirectPlayerPath(dv, map, validMoves, &numValidMoves);
-	makeRandomMove(dv, validMoves, &numValidMoves);
 	
-	// if all hunters are nearby, hide?
-	checkIfHide(dv, map, validMoves, &numValidMoves);
+	moveAwayFromClosestHunter(dv, map, validMoves, &numValidMoves);
 	
 	free(validMoves);
 	
-	return;
 }
 
 // Functions that handle AI "movement"
@@ -284,6 +286,7 @@ PlaceId *findPathBFS(Map map, PlaceId src, PlaceId dest, bool getPath,
 Player FindClosestPlayer(DraculaView dv, Map map, int *distance)
 {   
     PlaceId DracLoc = DvGetPlayerLocation(dv, PLAYER_DRACULA);
+    // declare array to hold distance to players
     int PlayerToDracLoc[4];
     PlayerToDracLoc[0] = PlayerToDrac(map, dv, PLAYER_LORD_GODALMING, DracLoc);
     PlayerToDracLoc[1] = PlayerToDrac(map, dv, PLAYER_DR_SEWARD, DracLoc);
@@ -360,4 +363,29 @@ bool isValidMove(PlaceId move, PlaceId *validMoves, int *numValidMoves)
 		}
 	}
     return false;
+}
+
+void moveAwayFromClosestHunter(DraculaView dv, Map map, PlaceId *validMoves, int *numValidMoves)
+{
+    int distance = 0;
+    Player closest = FindClosestPlayer(dv, map, &distance);
+    PlaceId closestLocation = DvGetPlayerLocation(dv, closest);
+    
+    int i = 0;
+    int hops = 0;
+    for (; i < *numValidMoves; i++) {
+        
+        bool canFree = false;
+        PlaceId *path;
+        if (placeIsReal(validMoves[i])) {
+       		path = findPathBFS(map, validMoves[i], closestLocation, false, &hops, &canFree);
+   		}
+   		
+        if (hops > distance) {
+			char *play = (char *) placeIdToAbbrev(validMoves[i]);
+			registerBestPlay(play, "Just try and catch me");
+			distance = hops;
+        }
+        if (canFree) free(path);
+    }
 }
