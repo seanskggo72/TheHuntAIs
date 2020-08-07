@@ -28,8 +28,8 @@
 // Local "movement" related functions
 void doFirstMove(DraculaView dv);
 void makeRandomMove(DraculaView dv, PlaceId *validMoves, int *numValidMoves);
-//void rmMovesInEndOfDirectPlayerPath(DraculaView dv, Map map, 
-	//PlaceId *validMoves, int *numValidMoves);
+void rmMovesInEndOfDirectPlayerPath(DraculaView dv, Map map, 
+	PlaceId *validMoves, int *numValidMoves);
 void goToCastleDrac(DraculaView dv, Map map, PlaceId *validMoves, 
 	int *numValidMoves, bool *moveMade);
 //void checkIfHide(DraculaView dv, Map map, PlaceId *validMoves, 
@@ -104,7 +104,7 @@ void decideDraculaMove(DraculaView dv)
 	// remove it from validMoves and suggest another?
 	
 	// I think this function is now next to useless
-	//rmMovesInEndOfDirectPlayerPath(dv, map, validMoves, &numValidMoves);
+	rmMovesInEndOfDirectPlayerPath(dv, map, validMoves, &numValidMoves);
 	
 	moveAwayFromClosestHunters(dv, map, validMoves, &numValidMoves);
 	
@@ -136,7 +136,7 @@ void makeRandomMove(DraculaView dv, PlaceId *validMoves, int *numValidMoves)
 	registerBestPlay(play, "Mwahahahaha");
 	return; 
 }
-/*
+
 void rmMovesInEndOfDirectPlayerPath(DraculaView dv, Map map, 
 	PlaceId *validMoves, int *numValidMoves) 
 {
@@ -200,7 +200,7 @@ void rmMovesInEndOfDirectPlayerPath(DraculaView dv, Map map,
 	if (canFreeHarkerPath) free(harkerPath);
 	if (canFreeSewardPath) free(sewardPath);
 	if (canFreeGodalmingPath) free(godalmingPath);
-}*/
+}
 
 // take the fastest route to castle drac if possible...
 void goToCastleDrac(DraculaView dv, Map map, PlaceId *validMoves, 
