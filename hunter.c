@@ -84,7 +84,7 @@ void decideHunterMove(HunterView hv) {
    int round = HvGetRound(hv), trail = 0, health = HvGetHealth(hv, current);
    PlaceId place = HvGetPlayerLocation(hv, current);;
    PlaceId DraculaLoc = HvGetLastKnownDraculaLocation(hv, &trail);
-   
+
    // Just in case no valid move is made, make a random move as backup move
    if (round != 0)
       makeRandomMove(hv);
@@ -157,17 +157,25 @@ void decideHunterMove(HunterView hv) {
 
    // If scouting finished, and Dracula trail is NOT found, move randomly 
    if (current == PLAYER_LORD_GODALMING) {
-      if (GscoutFinished) makeRandomMove(hv);
-      return;
+      if (GscoutFinished) {
+         makeRandomMove(hv);
+         return;
+      }
    } else if (current == PLAYER_DR_SEWARD) {
-      if (SscoutFinished) makeRandomMove(hv);
-      return;
+      if (SscoutFinished) {
+         makeRandomMove(hv);
+         return;
+      }
    }  else if (current == PLAYER_VAN_HELSING) {
-      if (VscoutFinished) makeRandomMove(hv);
-      return;
+      if (VscoutFinished) {
+         makeRandomMove(hv);
+         return;
+      }
    } else if (current == PLAYER_MINA_HARKER) {
-      if (HscoutFinished) makeRandomMove(hv);
-      return;
+      if (HscoutFinished) {
+         makeRandomMove(hv);
+         return;
+      }
    }
    
    // initial path of hunters
