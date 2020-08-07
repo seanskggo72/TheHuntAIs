@@ -81,7 +81,7 @@ void decideHunterMove(HunterView hv) {
    // Other important variables initialised
 	Player current = HvGetPlayer(hv);
    int round = HvGetRound(hv), trail = 0, health = HvGetHealth(hv, current);
-   PlaceId place = HvGetPlayerLocation(hv, current);;
+   PlaceId place = HvGetPlayerLocation(hv, current);
    PlaceId DraculaLoc = HvGetLastKnownDraculaLocation(hv, &trail);
 
    // Just in case no valid move is made, make a random move as backup move
@@ -95,12 +95,16 @@ void decideHunterMove(HunterView hv) {
       if (latestFound != DraculaLoc) {
          if (current == PLAYER_LORD_GODALMING) {
             godalming = DraculaLoc;
+            GplaceReached = false;
          } else if (current == PLAYER_DR_SEWARD) {
             seward = DraculaLoc;
+            SplaceReached = false;
          } else if (current == PLAYER_VAN_HELSING) {
             vanHelsing = DraculaLoc;
+            VplaceReached = false;
          } else if (current == PLAYER_MINA_HARKER) {
             harker = DraculaLoc;
+            HplaceReached = false;
          }
          // Update the latest found location to new dracula location
          latestFound = DraculaLoc;
