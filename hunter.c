@@ -88,7 +88,6 @@ void decideHunterMove(HunterView hv) {
    // Just in case no valid move is made, make a random move as backup move
    if (round != 0)
       makeRandomMove(hv);
-
    // If Drac trail found,
    if (DraculaLoc != NOWHERE) {
       // If the latest dracula location is different from the previous, update
@@ -141,7 +140,6 @@ void decideHunterMove(HunterView hv) {
       // Else, go towards the last known Drac location
       int pathLength = 0;
       PlaceId *path = HvGetShortestPathTo(hv, current, latestFound, &pathLength);
-      
       // If player reaches the last known location and no more trail is found,
       // Move randomly
       if (pathLength == 0) {
@@ -163,7 +161,6 @@ void decideHunterMove(HunterView hv) {
          return;
       }
    }
-
    // TODO: If two hunters in same city, change to new move
 
    // If hunter health is critically low
@@ -262,7 +259,7 @@ static void initialPlay(Player current) {
 
 static bool defaultPlayerMove(HunterView hv, Player current, PlaceId place) {
    int pathLength = 0;
-   if (HvGetPlayerLocation(hv, PLAYER_LORD_GODALMING) == place) {
+   if (HvGetPlayerLocation(hv, current) == place) {
       makeRandomMove(hv);
       return true;
    }
