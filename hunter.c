@@ -65,6 +65,7 @@ void decideHunterMove(HunterView hv) {
    
    // Latest location of dracula
    static PlaceId latestFound = NOWHERE;
+   static PlaceId vampLoc = NOWHERE;
 
    // Player target locations
    static PlaceId godalming = LIVERPOOL;
@@ -119,6 +120,24 @@ void decideHunterMove(HunterView hv) {
       
       // TODO: Reject new move if two hunters in the same city. Use messages
 
+      // If  immature vampire exists, make the closest player 
+      // go after the immature vamp
+      vampLoc = HvGetVampireLocation(hv);
+      if (vampLoc != NOWHERE && vampLoc != CITY_UNKNOWN) {
+         int length = 0;
+         HvGetShortestPathTo(hv, current, vampLoc, &length);
+         if (length < 6) {
+            if (current == PLAYER_LORD_GODALMING) 
+               godalming = vampLoc;
+            else if (current == PLAYER_DR_SEWARD)
+               seward = vampLoc;
+            else if (current == PLAYER_VAN_HELSING)
+               vanHelsing = vampLoc;
+            else if (current == PLAYER_MINA_HARKER) 
+               harker = vampLoc;
+         }
+      }
+
       // Else, go towards the last known Drac location
       int pathLength = 0;
       PlaceId *path = HvGetShortestPathTo(hv, current, latestFound, &pathLength);
@@ -146,24 +165,6 @@ void decideHunterMove(HunterView hv) {
    }
 
    // TODO: If two hunters in same city, change to new move
-
-   // TODO: If  immature vampire exists, make the closest player 
-   // go after the immature vamp
-   PlaceId vampLoc = HvGetVampireLocation(hv);
-   if (vampLoc != NOWHERE && vampLoc != CITY_UNKNOWN) {
-      int length = 0;
-      HvGetShortestPathTo(hv, current, vampLoc, &length);
-      if (length < 6) {
-         if (current == PLAYER_LORD_GODALMING) 
-            godalming = vampLoc;
-         else if (current == PLAYER_DR_SEWARD)
-            seward = vampLoc;
-         else if (current == PLAYER_VAN_HELSING)
-            vanHelsing = vampLoc;
-         else if (current == PLAYER_MINA_HARKER) 
-            harker = vampLoc;
-      }
-   }
 
    // If hunter health is critically low
    if (health <= 3) {
