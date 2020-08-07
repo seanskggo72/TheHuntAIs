@@ -38,7 +38,7 @@
 typedef struct hunter {
 	PlaceId *path;
 	int pathcount;
-} Hunter;
+} Hunter; // remove this struct
 
 //---------------------- Local Functions ------------------------//
 
@@ -63,8 +63,7 @@ static bool defaultPlayerMove(HunterView hv, Player current, PlaceId place);
 
 void decideHunterMove(HunterView hv) {
    
-   // Static variables to check certain conditions are met
-   static bool DracPlaceReached = false;
+   // Latest location of dracula
    static PlaceId latestFound = NOWHERE;
 
    // Player target locations
@@ -74,10 +73,10 @@ void decideHunterMove(HunterView hv) {
    static PlaceId harker = BUDAPEST;
 
    // Player scouting status
-   static bool GscoutFinished = false;
-   static bool SscoutFinished = false;
-   static bool VscoutFinished = false;
-   static bool HscoutFinished = false;
+   static bool GplaceReached = false;
+   static bool SplaceReached = false;
+   static bool VplaceReached = false;
+   static bool HplaceReached = false;
    
    // Other important variables initialised
 	Player current = HvGetPlayer(hv);
@@ -91,38 +90,53 @@ void decideHunterMove(HunterView hv) {
 
    // If Drac trail found,
    if (DraculaLoc != NOWHERE) {
+      // If the latest dracula location is different from the previous, update
+      // all hunter targets to that location
+      if (latestFound != DraculaLoc) {
+         if (current == PLAYER_LORD_GODALMING) {
+            godalming = DraculaLoc;
+         } else if (current == PLAYER_DR_SEWARD) {
+            seward = DraculaLoc;
+         } else if (current == PLAYER_VAN_HELSING) {
+            vanHelsing = DraculaLoc;
+         } else if (current == PLAYER_MINA_HARKER) {
+            harker = DraculaLoc;
+         }
+         // Update the latest found location to new dracula location
+         latestFound = DraculaLoc;
+      }
 
       // If player health is critically low, rest for the turn
       if (health <= 3) {
          char *name = (char *)placeIdToAbbrev(place);
          registerBestPlay(name, "Resting");
-         latestFound = DraculaLoc;
          return;
       }
-
-      // If the new Drac trail is different from past trail, make the new 
-      // location the target
-      if (latestFound != DraculaLoc) 
-         DracPlaceReached = false;
       
       // TODO: Reject new move if two hunters in the same city. Use messages
 
       // Else, go towards the last known Drac location
-      int distance;
-      int *pathLength = &distance;
-      PlaceId *path = HvGetShortestPathTo(hv, current, DraculaLoc, pathLength);
-      if (distance == 0) DracPlaceReached = true;
+      int pathLength = 0;
+      PlaceId *path = HvGetShortestPathTo(hv, current, latestFound, &pathLength);
+      
       // If player reaches the last known location and no more trail is found,
       // Move randomly
-      if (DracPlaceReached) {
+      if (pathLength == 0) {
+         if (current == PLAYER_LORD_GODALMING) {
+            GplaceReached = true;
+         } else if (current == PLAYER_DR_SEWARD) {
+            SplaceReached = true;
+         } else if (current == PLAYER_VAN_HELSING) {
+            VplaceReached = true;
+         } else if (current == PLAYER_MINA_HARKER) {
+            HplaceReached = true;
+         }
          makeRandomMove(hv);
-         latestFound = DraculaLoc;
          return;
       } else {
          char *name = (char *)placeIdToAbbrev(path[0]);
-         char *message = createMessage(distance);
+         char *message = createMessage(pathLength);
          registerBestPlay(name, message);
-         latestFound = DraculaLoc;
          return;
       }
    }
@@ -157,22 +171,22 @@ void decideHunterMove(HunterView hv) {
 
    // If scouting finished, and Dracula trail is NOT found, move randomly 
    if (current == PLAYER_LORD_GODALMING) {
-      if (GscoutFinished) {
+      if (GplaceReached) {
          makeRandomMove(hv);
          return;
       }
    } else if (current == PLAYER_DR_SEWARD) {
-      if (SscoutFinished) {
+      if (SplaceReached) {
          makeRandomMove(hv);
          return;
       }
    }  else if (current == PLAYER_VAN_HELSING) {
-      if (VscoutFinished) {
+      if (VplaceReached) {
          makeRandomMove(hv);
          return;
       }
    } else if (current == PLAYER_MINA_HARKER) {
-      if (HscoutFinished) {
+      if (HplaceReached) {
          makeRandomMove(hv);
          return;
       }
@@ -185,13 +199,13 @@ void decideHunterMove(HunterView hv) {
    } else { 
       switch(current) {
          case PLAYER_LORD_GODALMING:
-            GscoutFinished = defaultPlayerMove(hv, current, godalming);
+            GplaceReached = defaultPlayerMove(hv, current, godalming);
          case PLAYER_DR_SEWARD:
-            SscoutFinished = defaultPlayerMove(hv, current, seward);
+            SplaceReached = defaultPlayerMove(hv, current, seward);
          case PLAYER_VAN_HELSING:
-            VscoutFinished = defaultPlayerMove(hv, current, vanHelsing);
+            VplaceReached = defaultPlayerMove(hv, current, vanHelsing);
          case PLAYER_MINA_HARKER:
-            HscoutFinished = defaultPlayerMove(hv, current, harker);
+            HplaceReached = defaultPlayerMove(hv, current, harker);
          case PLAYER_DRACULA: break;
       } 
       return;
