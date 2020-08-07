@@ -35,17 +35,13 @@
 #include "Game.h"
 #include "Places.h"
 
-typedef struct hunter {
-	PlaceId *path;
-	int pathcount;
-} Hunter; // remove this struct
-
 //---------------------- Local Functions ------------------------//
 
 static char *createMessage(int distance);
 static void makeRandomMove(HunterView hv);
 static void initialPlay(Player current);
 static bool defaultPlayerMove(HunterView hv, Player current, PlaceId place);
+static PlaceId alternateRoute(HunterView hv, PlaceId dest, PlaceId current);
 
 //---------------------------------------------------------------//
 
@@ -60,6 +56,9 @@ static bool defaultPlayerMove(HunterView hv, Player current, PlaceId place);
 // rests for that turn
 
 // Version 3 (upcoming) - No two hunters can be in the same city.
+
+// Version 4.0 collective research decreased the performance drastically
+// so the feature was removed
 
 void decideHunterMove(HunterView hv) {
    
@@ -155,6 +154,10 @@ void decideHunterMove(HunterView hv) {
          makeRandomMove(hv);
          return;
       } else {
+         // function here that finds the next optimum route if the city 
+         // of shortest path is occupied
+         // input : destination hv, returns the new placeid
+         path[0] = alternateRoute(hv, latestFound, path[0]);
          char *name = (char *)placeIdToAbbrev(path[0]);
          char *message = createMessage(pathLength);
          registerBestPlay(name, message);
@@ -168,14 +171,6 @@ void decideHunterMove(HunterView hv) {
       PlaceId place = HvGetPlayerLocation(hv, current);
       char *name = (char *)placeIdToAbbrev(place);
       registerBestPlay(name, "Resting");
-      return;
-   }
-
-   // If round is 7 and the hunters have not found a Drac trail, perform
-   // research to find the trail
-   if (round == 7) {
-      char *play = (char *)placeIdToAbbrev(place);
-      registerBestPlay(play, "Collective Research");
       return;
    }
 
@@ -275,6 +270,50 @@ static bool defaultPlayerMove(HunterView hv, Player current, PlaceId place) {
    char *name = (char *)placeIdToAbbrev(path[0]);
    registerBestPlay(name, "Scouting/heading in direction");     
    return false;
+}
+
+static PlaceId alternateRoute(HunterView hv, PlaceId dest, PlaceId current) {
+   // Dev note: the final array size is supposed to be 3 less thatn numPLAces
+   // but because random omovement can affect the possible locations
+   // So made it big enough to fit
+   PlaceId array[3];
+   Player currentPlayer = HvGetPlayer(hv);
+   int i = 0, numPlaces;
+   bool conflict = false;
+   // check if the original current play makes conflict with other players
+   for (int j = 0; j < 4; j++) {
+      if (j == currentPlayer) continue;
+      if (HvGetPlayerLocation(hv, j) == current) conflict = true;
+   }
+   if (!conflict) return current;
+   
+   // Else, look for another route
+   for (int j = 0; j < 4; j++) {
+      if (j == currentPlayer) continue;
+      array[i] = HvGetPlayerLocation(hv, j);
+      i++;
+   }
+   i = 0;
+   PlaceId *possibilities = HvWhereCanIGo(hv, &numPlaces);
+   // supposed to be 3 less but in this case, leave it as is and use
+   // PLace is real to determine if locaiton is accessible. Remember to 
+   // get rid of the same location
+   PlaceId final[numPlaces - 1];
+   if (numPlaces <= 3) return current;
+   else {
+      for (int k = 0; k < numPlaces - 1; k++) {
+         conflict = false;
+         for (int j = 0; j < 3; j++) {
+            if (possibilities[k] == array[j]) conflict = true;
+         } 
+         if (!conflict && possibilities[k] != current) {
+            final[i] = possibilities[k];
+            i++;
+         }
+      }
+   }
+   if (placeIsReal(final[0])) return final[0];
+   else return current;
 }
 
 //------------------------- Backup Functions ---------------------------//
