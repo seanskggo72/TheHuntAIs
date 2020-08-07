@@ -31,7 +31,9 @@ void goToCastleDrac(DraculaView dv, Map map, PlaceId *validMoves,
 	int *numValidMoves, bool *moveMade);
 void checkIfHide(DraculaView dv, Map map, PlaceId *validMoves, 
     int *numValidMoves);
-	
+void moveAwayFromClosestHunter(DraculaView dv, Map map, PlaceId *validMoves, 
+    int *numValidMoves);
+    
 // Local utility functions
 PlaceId *findPathBFS(Map map, PlaceId src, PlaceId dest, bool getPath, 
     int *hops, bool *canFree);
@@ -82,7 +84,7 @@ void decideDraculaMove(DraculaView dv)
 	
 	// if all hunters are nearby, hide?
 	checkIfHide(dv, map, validMoves, &numValidMoves);
-	
+	moveAwayFromClosestHunter(dv, map, validMoves, &numValidMoves);
 	free(validMoves);
 	
 	return;
@@ -360,4 +362,23 @@ bool isValidMove(PlaceId move, PlaceId *validMoves, int *numValidMoves)
 		}
 	}
     return false;
+}
+
+void moveAwayFromClosestHunter(DraculaView dv, Map map, PlaceId *validMoves, int *numValidMoves)
+{
+    int distance = 0;
+    Player closest = FindClosestPlayer(dv, map, &distance);
+    PlaceId ClosestLocation = DvGetPlayerLocation(dv, closest);
+    
+    int i = 0;
+    for (; i < *numValidMoves; i++) {
+        int hops;
+        bool canFree;
+        findPathBFS(map, validMoves[i], ClosestLocation, false, &hops, &canFree);
+        if (hops > distance) {
+			char *play = (char *) placeIdToAbbrev(validMoves[i]);
+			registerBestPlay(play, "blehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh");
+        }
+    }
+    
 }
