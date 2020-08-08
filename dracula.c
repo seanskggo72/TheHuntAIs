@@ -63,17 +63,6 @@ void decideDraculaMove(DraculaView dv)
 	int numValidMoves = 0;
 	PlaceId *validMoves = DvGetValidMoves(dv, &numValidMoves);
 	
-	if (round % 13 == 0) {
-		// remove all sea moves
-		// TO-DO
-	}
-	
-	if (numSeaMovesMade >= 3) {
-		// go to MAINLAND/LAND AT LEASt
-		// TO-Do
-	}
-	
-	
 	// Random first move with slight error checking
 	if (numValidMoves == 0) {
 		registerBestPlay("TP", "Mwahahahaha");
@@ -82,6 +71,20 @@ void decideDraculaMove(DraculaView dv)
 		makeRandomMove(dv, validMoves, &numValidMoves);
 	}
 	
+	if (round % 13 == 0) {
+		// remove all sea moves
+		// TO-DO
+		for (int i = 0; i < numValidMoves; i++) {
+			if (placeIsSea(validMoves[i])) {
+				removeMove(validMoves[i], validMoves, &numValidMoves);
+			}
+		} 
+	}
+	
+	if (numSeaMovesMade >= 3) {
+		// go to MAINLAND/LAND AT LEASt
+		// TO-Do
+	}	
 	 
 	// Calculate better moves
 	Map map = DvGetMap(dv); 
@@ -136,7 +139,7 @@ void decideDraculaMove(DraculaView dv)
 
 void doFirstMove(DraculaView dv) 
 {
-	registerBestPlay("BR", "Mwahahahaha");
+	registerBestPlay("BR", "Don't try and catch me");
 	return;
 	
 }
@@ -278,6 +281,16 @@ void SeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves,
         for (; i < *numValidMoves; i++) {
             if (placeIdToType(validMoves[i]) == SEA) {
                 removeMove(validMoves[i], validMoves, numValidMoves);
+            } else {
+            	// We must consider DOUBLE_BACK moves!!!
+            	if (!isDoubleBack(validMoves[i])) return;
+            	else {
+            		// if the double back move is a sea move, remove it!
+            		PlaceId move = resolveDoubleBack(dv, validMoves[i]);
+            		if (placeIsSea(move)) {
+            			removeMove(move, validMoves, numValidMoves);
+            		}
+            	}
             }
         }
         
@@ -291,6 +304,7 @@ void SeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves,
             int i = 0;
             for (; i < *numValidMoves; i++) {
                 if (placeIdToType(validMoves[i]) == SEA) {
+                // THIS DOES NOT CONSIDER LIVERPOOL/IRISH SEA!!!
 			        char *play = (char *) placeIdToAbbrev(validMoves[i]);
 			        registerBestPlay(play, "OFF TO THE SEVEN SEAS");
 			        *moveMade = true;
@@ -302,6 +316,10 @@ void SeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves,
         int i = 0;
         for (; i < *numValidMoves; i++) {
         	// Irish Sea check is needed so that drac doesn't get stranded...see the game map
+        	// IN FACT the Irish Sea/LIVERPOOl case needs to be run through VERY carefully....
+        	// it's an ODD outlier of a case...
+        	
+     		// I think this whole little section needs to be re-examined!!!!
             if (isOnMainland(validMoves[i]) == false && validMoves[i] != IRISH_SEA) {
 		        removeMove(validMoves[i], validMoves, numValidMoves);
             }
@@ -312,9 +330,20 @@ void SeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves,
         for (; i < *numValidMoves; i++) {
             if (placeIdToType(validMoves[i]) == SEA) {
                 removeMove(validMoves[i], validMoves, numValidMoves);
+            } else {
+            	// We must consider DOUBLE_BACK moves!!!
+            	if (!isDoubleBack(validMoves[i])) return;
+            	else {
+            		// if the double back move is a sea move, remove it!
+            		PlaceId move = resolveDoubleBack(dv, validMoves[i]);
+            		if (placeIsSea(move)) {
+            			removeMove(move, validMoves, numValidMoves);
+            		}
+            	}
             }
         }        
     }
+    return;
 }
 
 
