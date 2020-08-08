@@ -135,7 +135,6 @@ void decideDraculaMove(DraculaView dv)
 		// else we need to register a new move
 		else {
 			makeRandomMove(dv, validMoves, &numValidMoves);
-			return;
 		}
 	} 
 	
