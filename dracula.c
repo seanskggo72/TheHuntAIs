@@ -83,7 +83,7 @@ void decideDraculaMove(DraculaView dv)
 	if (distance > 2) {
 		// remove all sea moves
 		removeSeaMoves(dv, validMoves, &numValidMoves);
-		makeRandomMove(dv, validMoves, &numValidMoves);
+		moveAwayFromClosestHunters(dv, map, validMoves, &numValidMoves);
 	}
 	
 	// if drac's loc is a sea loc, increment numSeaMovesMade
@@ -103,7 +103,7 @@ void decideDraculaMove(DraculaView dv)
 		
 		// do stuff 
 		removeSeaMoves(dv, validMoves, &numValidMoves);
-		makeRandomMove(dv, validMoves, &numValidMoves);
+		moveAwayFromClosestHunters(dv, map, validMoves, &numValidMoves);
 		numSeaMovesMade =  (numValidMoves != 0) ? 0 : 4;
 	}	
 	
@@ -117,7 +117,7 @@ void decideDraculaMove(DraculaView dv)
 		// function was pretty good but should be double checked
 	    SeaMoves(dv, validMoves, &numValidMoves, map, &moveMade);
 		if (moveMade) return;
-		else makeRandomMove(dv, validMoves, &numValidMoves);
+		else moveAwayFromClosestHunters(dv, map, validMoves, &numValidMoves);
 	}
 	
 	// If drac's health is low, get to CASTLE_DRACULA!!!
@@ -134,7 +134,7 @@ void decideDraculaMove(DraculaView dv)
 		if (moveMade) return;
 		// else we need to register a new move
 		else {
-			makeRandomMove(dv, validMoves, &numValidMoves);
+			moveAwayFromClosestHunters(dv, map, validMoves, &numValidMoves);
 		}
 	} 
 	
