@@ -80,7 +80,7 @@ void decideDraculaMove(DraculaView dv)
 	FindClosestPlayer(dv, map, &distance, PlayerToDracDistance, 
 	    DvGetPlayerLocation(dv, PLAYER_DRACULA));
 	
-	if (distance > 3) {
+	if (distance > 2) {
 		// remove all sea moves
 		removeSeaMoves(dv, validMoves, &numValidMoves);
 		makeRandomMove(dv, validMoves, &numValidMoves);
@@ -128,7 +128,7 @@ void decideDraculaMove(DraculaView dv)
 	/// THIS IS OLD...IDK IF WE NEED TO KEEP IT OR IMPROVE...
 	// will definitely be blended with the above IF STATEMENT tho...
 	
-	if (DvGetHealth(dv, PLAYER_DRACULA) <= 20) {
+	if (DvGetHealth(dv, PLAYER_DRACULA) < 40) {
 		bool moveMade = false;
 		goToCastleDrac(dv, map, validMoves, &numValidMoves, &moveMade);
 		if (moveMade) return;
@@ -231,7 +231,7 @@ bool safeToGoCastleDrac(DraculaView dv, Map map)
     int distance;
     int PlayerToDracDistance[4];
     FindClosestPlayer(dv, map, &distance, PlayerToDracDistance, CASTLE_DRACULA);
-    if (distance >= 3) {
+    if (distance > 3) {
         return true;
     } else {
         return false;
