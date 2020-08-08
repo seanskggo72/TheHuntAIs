@@ -53,14 +53,15 @@ bool isDracOnSea(DraculaView dv, Map map);
 
 void decideDraculaMove(DraculaView dv)
 {
-	if (DvGetRound(dv) == 0) {
+	int round = DvGetRound(dv);
+	static int numSeaMovesMade = 0; 
+	if (round == 0) {
 		doFirstMove(dv);
 		return;
 	}
 
 	int numValidMoves = 0;
 	PlaceId *validMoves = DvGetValidMoves(dv, &numValidMoves);
-	
 	
 	// Random first move with slight error checking
 	if (numValidMoves == 0) {
@@ -70,21 +71,41 @@ void decideDraculaMove(DraculaView dv)
 		makeRandomMove(dv, validMoves, &numValidMoves);
 	}
 	
+	if (round % 13 == 0) {
+		// remove all sea moves
+		// TO-DO
+		for (int i = 0; i < numValidMoves; i++) {
+			if (placeIsSea(validMoves[i])) {
+				removeMove(validMoves[i], validMoves, &numValidMoves);
+			}
+		} 
+	}
+	
+	if (numSeaMovesMade >= 3) {
+		// go to MAINLAND/LAND AT LEASt
+		// TO-Do
+	}	
 	 
 	// Calculate better moves
 	Map map = DvGetMap(dv); 
 	
-	// Make sea moves
+	// Make sea move - CHANGE TO BE A LOW HEALTH FUNC...
 	if (DvGetHealth(dv, PLAYER_DRACULA) <= LOW_HEALTH) {
 		bool moveMade = false;
+		// function was pretty good but should be double checked
 	    SeaMoves(dv, validMoves, &numValidMoves, map, &moveMade);
 		if (moveMade) return;
+		else makeRandomMove(dv, validMoves, &numValidMoves);
 	}
 	
 	// If drac's health is low, get to CASTLE_DRACULA!!!
 	// maybe return early, maybe continue? maybe this logic should 
 	// even come after removeMovesInDirectPlayerPath??
 	
+	
+	/// THIS IS OLD...IDK IF WE NEED TO KEEP IT OR IMPROVE...
+	// will definitely be blended with the above IF STATEMENT tho...
+	/*
 	if (DvGetHealth(dv, PLAYER_DRACULA) <= 20) {
 		bool moveMade = false;
 		goToCastleDrac(dv, map, validMoves, &numValidMoves, &moveMade);
@@ -94,18 +115,20 @@ void decideDraculaMove(DraculaView dv)
 			makeRandomMove(dv, validMoves, &numValidMoves);
 			return;
 		}
-	}
+	} */ 
 	
 	// if all hunters are nearby, hide.
-	// NOT USING THIS RN
+	// NOT USING THIS RN - IN FACT MAY BE MADE
 	//checkIfHide(dv, map, validMoves, &numValidMoves);
 	
 	// If the current bestPlay is in the shortest path of a player to drac,
 	// remove it from validMoves and suggest another?
 	
-	// I think this function is now next to useless
+	// I think this function is now next to useless...it turns out it;s not 
+	// BUT!! but in some scenarios
 	rmMovesInEndOfDirectPlayerPath(dv, map, validMoves, &numValidMoves);
 	
+	// function needs checking and some reevaluation
 	moveAwayFromClosestHunters(dv, map, validMoves, &numValidMoves);
 	
 	free(validMoves);
@@ -116,7 +139,7 @@ void decideDraculaMove(DraculaView dv)
 
 void doFirstMove(DraculaView dv) 
 {
-	registerBestPlay("BR", "Mwahahahaha");
+	registerBestPlay("BR", "Don't try and catch me");
 	return;
 	
 }
@@ -258,6 +281,16 @@ void SeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves,
         for (; i < *numValidMoves; i++) {
             if (placeIdToType(validMoves[i]) == SEA) {
                 removeMove(validMoves[i], validMoves, numValidMoves);
+            } else {
+            	// We must consider DOUBLE_BACK moves!!!
+            	if (!isDoubleBack(validMoves[i])) return;
+            	else {
+            		// if the double back move is a sea move, remove it!
+            		PlaceId move = resolveDoubleBack(dv, validMoves[i]);
+            		if (placeIsSea(move)) {
+            			removeMove(move, validMoves, numValidMoves);
+            		}
+            	}
             }
         }
         
@@ -271,6 +304,7 @@ void SeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves,
             int i = 0;
             for (; i < *numValidMoves; i++) {
                 if (placeIdToType(validMoves[i]) == SEA) {
+                // THIS DOES NOT CONSIDER LIVERPOOL/IRISH SEA!!!
 			        char *play = (char *) placeIdToAbbrev(validMoves[i]);
 			        registerBestPlay(play, "OFF TO THE SEVEN SEAS");
 			        *moveMade = true;
@@ -282,6 +316,10 @@ void SeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves,
         int i = 0;
         for (; i < *numValidMoves; i++) {
         	// Irish Sea check is needed so that drac doesn't get stranded...see the game map
+        	// IN FACT the Irish Sea/LIVERPOOl case needs to be run through VERY carefully....
+        	// it's an ODD outlier of a case...
+        	
+     		// I think this whole little section needs to be re-examined!!!!
             if (isOnMainland(validMoves[i]) == false && validMoves[i] != IRISH_SEA) {
 		        removeMove(validMoves[i], validMoves, numValidMoves);
             }
@@ -292,9 +330,20 @@ void SeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves,
         for (; i < *numValidMoves; i++) {
             if (placeIdToType(validMoves[i]) == SEA) {
                 removeMove(validMoves[i], validMoves, numValidMoves);
+            } else {
+            	// We must consider DOUBLE_BACK moves!!!
+            	if (!isDoubleBack(validMoves[i])) return;
+            	else {
+            		// if the double back move is a sea move, remove it!
+            		PlaceId move = resolveDoubleBack(dv, validMoves[i]);
+            		if (placeIsSea(move)) {
+            			removeMove(move, validMoves, numValidMoves);
+            		}
+            	}
             }
         }        
     }
+    return;
 }
 
 
