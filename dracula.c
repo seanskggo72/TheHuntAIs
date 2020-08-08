@@ -28,8 +28,7 @@
 // Local "movement" related functions
 void doFirstMove(DraculaView dv);
 void makeRandomMove(DraculaView dv, PlaceId *validMoves, int *numValidMoves);
-//void rmMovesInEndOfDirectPlayerPath(DraculaView dv, Map map, 
-	//PlaceId *validMoves, int *numValidMoves);
+void rmMovesToHuners(DraculaView dv, PlaceId *validMoves, int *numValidMoves);
 void goToCastleDrac(DraculaView dv, Map map, PlaceId *validMoves, 
 	int *numValidMoves, bool *moveMade);
 //void checkIfHide(DraculaView dv, Map map, PlaceId *validMoves, 
@@ -38,6 +37,7 @@ void moveAwayFromClosestHunters(DraculaView dv, Map map, PlaceId *validMoves,
     int *numValidMoves);
 void SeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves, 
     Map map, bool *moveMade);
+void beenToCDRecentlyCheck(DraculaView dv, PlaceId *validMoves, int *numValidMoves);
     
 // Local utility functions
 PlaceId *findPathBFS(Map map, PlaceId src, PlaceId dest, bool getPath, 
@@ -84,6 +84,11 @@ void decideDraculaMove(DraculaView dv)
 	}
 	
 	
+	// If drac has been to CD recently, we must be careful about what moves 
+	// we make...
+	beenToCDRecentlyCheck(dv, validMoves, &numValidMoves);
+	
+	
 	if (numSeaMovesMade >= 3) {
 		// go to MAINLAND/LAND AT LEASt
 		// TO-Do
@@ -91,11 +96,13 @@ void decideDraculaMove(DraculaView dv)
 		// do stuff 
 		removeSeaMoves(dv, validMoves, &numValidMoves);
 		makeRandomMove(dv, validMoves, &numValidMoves);
-		// at end of the logic
-		numSeaMovesMade = 0;
+		numSeaMovesMade =  (numValidMoves != 0) ? 0 : 4;
 	}	
+	
+	// Don't go to locations occupied by hunters
+	rmMovesToHuners(dv, validMoves, &numValidMoves); 
 	 
-	// Calculate better moves
+	// Now calculate even better moves
 	Map map = DvGetMap(dv); 
 	
 	// Make sea move - CHANGE TO BE A LOW HEALTH FUNC...
@@ -125,17 +132,6 @@ void decideDraculaMove(DraculaView dv)
 			return;
 		}
 	} */ 
-	
-	// if all hunters are nearby, hide.
-	// NOT USING THIS RN - IN FACT MAY BE MADE
-	//checkIfHide(dv, map, validMoves, &numValidMoves);
-	
-	// If the current bestPlay is in the shortest path of a player to drac,
-	// remove it from validMoves and suggest another?
-	
-	// I think this function is now next to useless...it turns out it;s not 
-	// BUT!! but in some scenarios
-	//rmMovesInEndOfDirectPlayerPath(dv, map, validMoves, &numValidMoves);
 	
 	// function needs checking and some reevaluation
 	moveAwayFromClosestHunters(dv, map, validMoves, &numValidMoves);
@@ -168,71 +164,21 @@ void makeRandomMove(DraculaView dv, PlaceId *validMoves, int *numValidMoves)
 	registerBestPlay(play, "Mwahahahaha");
 	return; 
 }
-/*
-void rmMovesInEndOfDirectPlayerPath(DraculaView dv, Map map, 
-	PlaceId *validMoves, int *numValidMoves) 
+
+void rmMovesToHuners(DraculaView dv, PlaceId *validMoves, int *numValidMoves) 
 {
 	PlaceId helsingLoc = DvGetPlayerLocation(dv, PLAYER_VAN_HELSING);
 	PlaceId sewardLoc = DvGetPlayerLocation(dv, PLAYER_DR_SEWARD);
 	PlaceId godalmingLoc = DvGetPlayerLocation(dv, PLAYER_LORD_GODALMING);
 	PlaceId harkerLoc = DvGetPlayerLocation(dv, PLAYER_MINA_HARKER);
-	PlaceId dracLoc = DvGetPlayerLocation(dv, PLAYER_DRACULA);
 	
-	// path to hesling 
-	int helsingPathLength = 0;
-	bool canFreeHelsingPath = false;
-	PlaceId *helsingPath = findPathBFS(map, dracLoc, helsingLoc, true, 
-		&helsingPathLength, &canFreeHelsingPath);
-	
-	// path to seward 
-	int sewardPathLength = 0;
-	bool canFreeSewardPath = false;
-	PlaceId *sewardPath = findPathBFS(map, dracLoc, sewardLoc, true, 
-		&sewardPathLength, &canFreeSewardPath);
-		
-	// path to godalming
-	int godalmingPathLength = 0;
-	bool canFreeGodalmingPath = false;
-	PlaceId *godalmingPath = findPathBFS(map, dracLoc, godalmingLoc, true, 
-		&godalmingPathLength, &canFreeGodalmingPath);
-		
-	// path to harker
-	int harkerPathLength = 0;
-	bool canFreeHarkerPath = false;
-	PlaceId *harkerPath = findPathBFS(map, dracLoc, harkerLoc, true, 
-	&harkerPathLength, &canFreeHarkerPath);
-		
-	// we only consider removing moves that lie in the hunter's path 
-	// if they are close (i.e. within <= 5 cities)
-	
-	// these if statements call internal funcs
-	// note that paths are given in reverse order...
-	// so accessing them at index one gives the move in the path that
-	// is adjacent to drac's current loc
-	if (helsingPathLength <= 5 && helsingPathLength >= 2)  {
-		removeMove(helsingPath[1], validMoves, 
-			numValidMoves);
-	}
-	
-	if (sewardPathLength <= 5 && sewardPathLength >= 2) {
-		removeMove(sewardPath[1], validMoves, numValidMoves);
-	}
-	
-	if (godalmingPathLength <= 5 && godalmingPathLength >= 2) {
-		removeMove(godalmingPath[1], validMoves, 
-			numValidMoves);
-	}
-	
-	if (harkerPathLength <= 5 && harkerPathLength >= 2) {
-		removeMove(harkerPath[1], validMoves, numValidMoves);
-	}
+	removeMove(helsingLoc, validMoves, numValidMoves);
+	removeMove(sewardLoc, validMoves, numValidMoves);
+	removeMove(godalmingLoc, validMoves, numValidMoves);
+	removeMove(harkerLoc, validMoves, numValidMoves);
 	
 	makeRandomMove(dv, validMoves, numValidMoves);
-	if (canFreeHelsingPath) free(helsingPath);
-	if (canFreeHarkerPath) free(harkerPath);
-	if (canFreeSewardPath) free(sewardPath);
-	if (canFreeGodalmingPath) free(godalmingPath);
-}*/
+}
 
 // take the fastest route to castle drac if possible...
 void goToCastleDrac(DraculaView dv, Map map, PlaceId *validMoves, 
@@ -309,6 +255,8 @@ void SeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves,
         if (DracLocation == MANCHESTER) {
             moveAwayFromClosestHunters(dv, map, validMoves, numValidMoves);
             *moveMade = true;
+        } else if (DracLocation == LIVERPOOL) {
+        	removeMove(IRISH_SEA, validMoves, numValidMoves);
         } else {
             int i = 0;
             for (; i < *numValidMoves; i++) {
@@ -322,14 +270,19 @@ void SeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves,
         }
     } else if (DracHealth <= LOW_HEALTH && isDracOnSea(dv, map) == true) {
         // GET TO MAINLAND ASAP, remove all Great Britain moves
+        
+       	// deal with the case where drac is in the IRISH_SEA 
+        if (DracLocation == IRISH_SEA) {
+    		if (isValidMove(ATLANTIC_OCEAN, validMoves, numValidMoves))
+    			registerBestPlay("AO", "A tricky little situation");
+    		*moveMade = true;
+    		return;
+        }
         int i = 0;
         for (; i < *numValidMoves; i++) {
-        	// Irish Sea check is needed so that drac doesn't get stranded...see the game map
-        	// IN FACT the Irish Sea/LIVERPOOl case needs to be run through VERY carefully....
-        	// it's an ODD outlier of a case...
         	
      		// I think this whole little section needs to be re-examined!!!!
-            if (isOnMainland(validMoves[i]) == false && validMoves[i] != IRISH_SEA) {
+            if (isOnMainland(validMoves[i]) == false) {
 		        removeMove(validMoves[i], validMoves, numValidMoves);
             }
         }         
@@ -353,6 +306,26 @@ void SeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves,
         }        
     }
     return;
+}
+
+void beenToCDRecentlyCheck(DraculaView dv, PlaceId *validMoves, int *numValidMoves)
+{
+	if (DvGetPlayerLocation(dv, PLAYER_DRACULA) == CASTLE_DRACULA) {
+		removeMove(DOUBLE_BACK_1, validMoves, numValidMoves);
+		removeMove(HIDE, validMoves, numValidMoves);
+	} else {
+		int trailLength = 0;
+		PlaceId *trail = DvWhereHaveIBeen(dv, &trailLength);
+		for (int i = 0; i < trailLength; i++) {
+			if (trail[i] == CASTLE_DRACULA) {
+				removeMove((DOUBLE_BACK_1 + i), validMoves, numValidMoves);
+				if (i < 4) removeMove((HIDE), validMoves, numValidMoves);
+			}
+		}
+	}
+	
+	makeRandomMove(dv, validMoves, numValidMoves);
+	return;
 }
 
 
@@ -530,6 +503,8 @@ void moveAwayFromClosestHunters(DraculaView dv, Map map, PlaceId *validMoves, in
 		    	int tempDistance = 0;
 				if (placeIsReal(validMoves[i])) {
 			   		path = findPathBFS(map, validMoves[i], hunterLocs[counter], false, &tempDistance, &canFree);
+		   		} else if (isDoubleBack(validMoves[i])) {
+		   			path = findPathBFS(map, resolveDoubleBack(dv, validMoves[i]), hunterLocs[counter], false, &tempDistance, &canFree);
 		   		}
 		   		validMoveToHunterDist += tempDistance;
 	   		}
@@ -540,7 +515,8 @@ void moveAwayFromClosestHunters(DraculaView dv, Map map, PlaceId *validMoves, in
 		    }
 		    if (canFree) free(path);
 		}
-		
+		// we've been overwriting bestPlay with the best play until now
+		// so this IS the best play..
 		if (bestPlay != NULL) {
 			registerBestPlay(bestPlay, "Just try and catch me");
 		}
