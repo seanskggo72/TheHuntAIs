@@ -41,6 +41,7 @@ static char *createMessage(int distance);
 static void makeRandomMove(HunterView hv);
 static void initialPlay(Player current);
 static bool defaultPlayerMove(HunterView hv, Player current, PlaceId place);
+static PlaceId predictDracDest(HunterView hv, PlaceId dracLoc);   
 
 //---------------------------------------------------------------//
 
@@ -98,26 +99,31 @@ void decideHunterMove(HunterView hv) {
       // -------------- Defining Player Target Locations ------------------ //
 
       // If the latest dracula location is different from the previous, update
-      // all hunter targets to the location
+      // all hunter targets to a predicted location
       if (latestFound != DraculaLoc) {
+         PlaceId predictedPlace = predictDracDest(hv, latestFound);   
          if (current == PLAYER_LORD_GODALMING) {
-            if (godalming != vampLoc) {
-               godalming = latestFound;
+            if (predictedPlace == NOWHERE) GplaceReached = true;
+            else {
+               godalming = predictedPlace;
                GplaceReached = false;
             }
          } else if (current == PLAYER_DR_SEWARD) {
-            if (seward != vampLoc) {
-               seward = latestFound;
+            if (predictedPlace == NOWHERE) SplaceReached = true;
+            else {
+               seward = predictedPlace;
                SplaceReached = false;
             }
          } else if (current == PLAYER_VAN_HELSING) {
-            if (vanHelsing != vampLoc) {
-               vanHelsing = latestFound;
+            if (predictedPlace == NOWHERE) VplaceReached = true;
+            else {
+               vanHelsing = predictedPlace;
                VplaceReached = false;
             }
          } else if (current == PLAYER_MINA_HARKER) {
-            if (godalming != vampLoc) {
-               harker = latestFound;
+            if (predictedPlace == NOWHERE) HplaceReached = true;
+            else {
+               harker = predictedPlace;
                HplaceReached = false;
             }
          }
@@ -140,7 +146,7 @@ void decideHunterMove(HunterView hv) {
       // go after the immature vamp
       vampLoc = HvGetVampireLocation(hv);
       if (vampLoc == NOWHERE) vampLocTaken = false;
-      else if (vampLoc != CITY_UNKNOWN && round % 13 == 0 && !vampLocTaken) {
+      if (vampLoc != NOWHERE && vampLoc != CITY_UNKNOWN && round % 13 == 0) {
          int length = 0;
          HvGetShortestPathTo(hv, current, vampLoc, &length);
          if (length > 0 && length < 6) {
@@ -218,6 +224,15 @@ void decideHunterMove(HunterView hv) {
       registerBestPlay(name, "Resting");
       return;
    }
+
+   // If after round 6, the hunters have not found Dracula, use collective
+   // research
+   if (round == 6) {
+      char *name = (char *)placeIdToAbbrev(place);
+      registerBestPlay(name, "Researching...");
+      return;
+   }
+
 
    // If scouting finished, and Dracula trail is NOT found, move randomly 
    if (current == PLAYER_LORD_GODALMING) {
@@ -303,6 +318,19 @@ static bool defaultPlayerMove(HunterView hv, Player current, PlaceId place) {
    registerBestPlay(name, "Scouting/heading in direction");     
    return false;
 }
+
+static PlaceId predictDracDest(HunterView hv, PlaceId dracLoc) {
+   int numOptions;
+   PlaceId *options = HvWhereCanTheyGo(hv, PLAYER_DRACULA, &numOptions);
+   unsigned int seed = (unsigned int)time(NULL);
+	srand(seed);
+   if (numOptions == 0) return NOWHERE;
+   else {
+	   int randomIndex = rand() % numOptions;
+      return options[randomIndex];
+   }
+}
+
 
 
 //------------------------- Backup Functions ---------------------------//
