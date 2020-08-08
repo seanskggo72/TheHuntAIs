@@ -183,7 +183,10 @@ PlaceId *DvWhereCanTheyGoByType(DraculaView dv, Player player,
                                 int *numReturnedLocs);
 
 ////////////////////////////////////////////////////////////////////////
-// Your own interface functions
+// Interface functions that used to be static helpers
+
+PlaceId resolveDoubleBack(DraculaView dv, PlaceId db);
+bool isDoubleBack(PlaceId move);
 
 // TODO
 
