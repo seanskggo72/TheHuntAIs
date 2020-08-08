@@ -227,7 +227,7 @@ void decideHunterMove(HunterView hv) {
 
    // If after round 6, the hunters have not found Dracula, use collective
    // research
-   if (round == 6) {
+   if (round == 6 || round == 7) {
       char *name = (char *)placeIdToAbbrev(place);
       registerBestPlay(name, "Researching...");
       return;
@@ -253,12 +253,16 @@ void decideHunterMove(HunterView hv) {
       switch(current) {
          case PLAYER_LORD_GODALMING:
             GplaceReached = defaultPlayerMove(hv, current, godalming);
+            break;
          case PLAYER_DR_SEWARD:
             SplaceReached = defaultPlayerMove(hv, current, seward);
+            break;
          case PLAYER_VAN_HELSING:
-            VplaceReached = defaultPlayerMove(hv, current, vanHelsing);
+            VplaceReached = defaultPlayerMove(hv, current, vanHelsing);\
+            break;
          case PLAYER_MINA_HARKER:
             HplaceReached = defaultPlayerMove(hv, current, harker);
+            break;
          case PLAYER_DRACULA: break;
       } 
       return;
@@ -296,13 +300,17 @@ static void makeRandomMove(HunterView hv) {
 static void initialPlay(Player current) {
    switch(current) {
       case PLAYER_LORD_GODALMING:
-         registerBestPlay("SR", "First move");     
+         registerBestPlay("SR", "First move"); 
+         break;    
       case PLAYER_DR_SEWARD:
          registerBestPlay("MR", "First move");
+         break;
       case PLAYER_VAN_HELSING:
-         registerBestPlay("NP", "First move");  
+         registerBestPlay("NP", "First move"); 
+         break; 
       case PLAYER_MINA_HARKER:
          registerBestPlay("AT", "First move");   
+         break;
       case PLAYER_DRACULA: break;
    }
 }
