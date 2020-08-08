@@ -355,3 +355,9 @@ PlaceId DvWhereAmI(DraculaView dv)
 {
 	return DvGetPlayerLocation(dv, PLAYER_DRACULA);
 }
+
+PlaceId *DvWhereHaveIBeen(DraculaView dv, int *trailLength) 
+{
+	*trailLength = dv->trailLength;
+	return dv->trailLocations;
+}

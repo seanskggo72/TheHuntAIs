@@ -188,6 +188,11 @@ PlaceId *DvWhereCanTheyGoByType(DraculaView dv, Player player,
 PlaceId resolveDoubleBack(DraculaView dv, PlaceId db);
 bool isDoubleBack(PlaceId move);
 
-// TODO
+// Functions we wrote
+
+/**
+ * Returns the trail locations of Dracula
+ */
+PlaceId *DvWhereHaveIBeen(DraculaView dv, int *trailLength);
 
 #endif // !defined(FOD__DRACULA_VIEW_H_)
