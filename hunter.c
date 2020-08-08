@@ -67,8 +67,8 @@ static PlaceId predictDracDest(HunterView hv, PlaceId dracLoc);
 void decideHunterMove(HunterView hv) {
 
    // Latest location of dracula
-   static PlaceId latestFound = NOWHERE;
-   static PlaceId vampLoc = NOWHERE;
+   static PlaceId latestFound;
+   static PlaceId vampLoc;
    static bool vampLocTaken = false;
 
    // Player target locations
