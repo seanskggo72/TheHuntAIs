@@ -44,7 +44,8 @@ PlaceId *findPathBFS(Map map, PlaceId src, PlaceId dest, bool getPath,
     int *hops, bool *canFree);
 int PlayerToDrac(Map map, DraculaView dv, Player player, PlaceId DracLoc);
 Player FindClosestPlayer(DraculaView dv, Map map, int *distance, int PlayerToDracDistance[4]);
-void removeMove(PlaceId move, PlaceId *validMoves, int *numValidMoves);
+void removeMove(DraculaView dv, PlaceId move, PlaceId *validMoves, 
+	int *numValidMoves);
 bool isValidMove(PlaceId move, PlaceId *validMoves, int *numValidMoves);
 void McBubbleSort(int *a, int max);
 bool isOnMainland(PlaceId Location);
@@ -75,7 +76,12 @@ void decideDraculaMove(DraculaView dv)
 		makeRandomMove(dv, validMoves, &numValidMoves);
 	}
 	
-	if (round % 13 == 0) {
+	Map map = DvGetMap(dv); 
+	int distanceToClose = 0;
+	int temp[4];
+	Player closest = FindClosestPlayer(dv, map, &distanceToClose, temp);
+	
+	if (round % 13 == 0 && distanceToClose > 2) {
 		// remove all sea moves
 		removeSeaMoves(dv, validMoves, &numValidMoves);
 		makeRandomMove(dv, validMoves, &numValidMoves);
@@ -106,12 +112,8 @@ void decideDraculaMove(DraculaView dv)
 	rmMovesToHuners(dv, validMoves, &numValidMoves); 
 	 
 	// Now calculate even better moves
-	Map map = DvGetMap(dv); 
 	
 	// If player is right next to drac, remove HIDES and DOUBLE_BACK_1s...
-	int distanceToClose = 0;
-	int temp[4];
-	Player closest = FindClosestPlayer(dv, map, &distanceToClose, temp);
 	if (distanceToClose < 3 ) removeHide(dv, validMoves, &numValidMoves);
 	
 	// if the distance to the cloest hunter is < 5, avoid going to places they 
@@ -128,12 +130,12 @@ void decideDraculaMove(DraculaView dv)
 		if (moveMade) return;
 		else makeRandomMove(dv, validMoves, &numValidMoves);
 	} else {
-		removeMove(CASTLE_DRACULA, validMoves, &numValidMoves);
+		removeMove(dv, CASTLE_DRACULA, validMoves, &numValidMoves);
 	}
 	
 	// prevent drac going to ATHENS if possible...
 	if (isOnMainland(DvGetPlayerLocation(dv, PLAYER_DRACULA))) {
-		removeMove(ATHENS, validMoves, &numValidMoves);
+		removeMove(dv, ATHENS, validMoves, &numValidMoves);
 	}
 	
 	// If drac's health is low, get to CASTLE_DRACULA!!!
@@ -178,10 +180,10 @@ void rmMovesToHuners(DraculaView dv, PlaceId *validMoves, int *numValidMoves)
 	PlaceId godalmingLoc = DvGetPlayerLocation(dv, PLAYER_LORD_GODALMING);
 	PlaceId harkerLoc = DvGetPlayerLocation(dv, PLAYER_MINA_HARKER);
 	
-	removeMove(helsingLoc, validMoves, numValidMoves);
-	removeMove(sewardLoc, validMoves, numValidMoves);
-	removeMove(godalmingLoc, validMoves, numValidMoves);
-	removeMove(harkerLoc, validMoves, numValidMoves);
+	removeMove(dv, helsingLoc, validMoves, numValidMoves);
+	removeMove(dv, sewardLoc, validMoves, numValidMoves);
+	removeMove(dv, godalmingLoc, validMoves, numValidMoves);
+	removeMove(dv, harkerLoc, validMoves, numValidMoves);
 	
 	for (int i = 0; i < *numValidMoves; i++) {
 		if (isDoubleBack(validMoves[i])) {
@@ -189,7 +191,7 @@ void rmMovesToHuners(DraculaView dv, PlaceId *validMoves, int *numValidMoves)
     		PlaceId move = resolveDoubleBack(dv, validMoves[i]);
     		if (move == helsingLoc || move == sewardLoc || 
     			move == godalmingLoc || move == harkerLoc) {
-    			removeMove(move, validMoves, numValidMoves);
+    			removeMove(dv, move, validMoves, numValidMoves);
     		}
 		}
 	}
@@ -252,7 +254,7 @@ void SeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves,
         int i = 0;
         for (; i < *numValidMoves; i++) {
             if (placeIdToType(validMoves[i]) == SEA) {
-                removeMove(validMoves[i], validMoves, numValidMoves);
+                removeMove(dv, validMoves[i], validMoves, numValidMoves);
             } else {
             	// We must consider DOUBLE_BACK moves!!!
             	if (!isDoubleBack(validMoves[i])) return;
@@ -260,7 +262,7 @@ void SeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves,
             		// if the double back move is a sea move, remove it!
             		PlaceId move = resolveDoubleBack(dv, validMoves[i]);
             		if (placeIsSea(move)) {
-            			removeMove(move, validMoves, numValidMoves);
+            			removeMove(dv, move, validMoves, numValidMoves);
             		}
             	}
             }
@@ -293,7 +295,7 @@ void SeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves,
         	
      		// I think this whole little section needs to be re-examined!!!!
             if (isOnMainland(validMoves[i]) == false && validMoves[i] != IRISH_SEA) {
-		        removeMove(validMoves[i], validMoves, numValidMoves);
+		        removeMove(dv, validMoves[i], validMoves, numValidMoves);
             }
         }         
     } else if (DracHealth <= LOW_HEALTH && isOnMainland(DracLocation) == true) {
@@ -301,7 +303,7 @@ void SeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves,
         int i = 0;
         for (; i < *numValidMoves; i++) {
             if (placeIdToType(validMoves[i]) == SEA) {
-                removeMove(validMoves[i], validMoves, numValidMoves);
+                removeMove(dv, validMoves[i], validMoves, numValidMoves);
             } else {
             	// We must consider DOUBLE_BACK moves!!!
             	if (!isDoubleBack(validMoves[i])) return;
@@ -309,7 +311,7 @@ void SeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves,
             		// if the double back move is a sea move, remove it!
             		PlaceId move = resolveDoubleBack(dv, validMoves[i]);
             		if (placeIsSea(move)) {
-            			removeMove(move, validMoves, numValidMoves);
+            			removeMove(dv, move, validMoves, numValidMoves);
             		}
             	}
             }
@@ -321,15 +323,15 @@ void SeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves,
 void beenToCDRecentlyCheck(DraculaView dv, PlaceId *validMoves, int *numValidMoves)
 {
 	if (DvGetPlayerLocation(dv, PLAYER_DRACULA) == CASTLE_DRACULA) {
-		removeMove(DOUBLE_BACK_1, validMoves, numValidMoves);
-		removeMove(HIDE, validMoves, numValidMoves);
+		removeMove(dv, DOUBLE_BACK_1, validMoves, numValidMoves);
+		removeMove(dv, HIDE, validMoves, numValidMoves);
 	} else {
 		int trailLength = 0;
 		PlaceId *trail = DvWhereHaveIBeen(dv, &trailLength);
 		for (int i = 0; i < trailLength; i++) {
 			if (trail[i] == CASTLE_DRACULA) {
-				removeMove((DOUBLE_BACK_1 + i), validMoves, numValidMoves);
-				if (i < 4) removeMove((HIDE), validMoves, numValidMoves);
+				removeMove(dv, (DOUBLE_BACK_1 + i), validMoves, numValidMoves);
+				if (i < 4) removeMove(dv, (HIDE), validMoves, numValidMoves);
 			}
 		}
 	}
@@ -435,7 +437,8 @@ int PlayerToDrac(Map map, DraculaView dv, Player player, PlaceId DracLoc)
     return hops;
 }
 
-void removeMove(PlaceId move, PlaceId *validMoves, int *numValidMoves) 
+void removeMove(DraculaView dv, PlaceId move, PlaceId *validMoves, 
+	int *numValidMoves) 
 {
 	bool foundMove = false;
 	int i = 0;
@@ -443,6 +446,12 @@ void removeMove(PlaceId move, PlaceId *validMoves, int *numValidMoves)
 		if (validMoves[i] == move) {
 			foundMove = true;
 			break;
+		} else if (isDoubleBack(validMoves[i])) {
+			PlaceId doubleBack = resolveDoubleBack(dv, validMoves[i]);
+    		if (doubleBack == move) {
+    			foundMove = true;
+    			break;
+    		}
 		}
 	}
 	
@@ -496,7 +505,7 @@ void moveAwayFromClosestHunters(DraculaView dv, Map map, PlaceId *validMoves, in
 			
 	McBubbleSort(hunterToDracDistance, HUNTER_NUM);
 	// outer loop checks closest hunter, then closest 2 hunters, etv...
-	for (int j = 1; j <= (HUNTER_NUM); j++) {
+	for (int j = 1; j <= (HUNTER_NUM - 1); j++) {
 		int i = 0;
 		
 		// this is the sum of distance from dracula to each hunter being considered
@@ -576,12 +585,12 @@ void removeSeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves)
 	for (int i = 0; i < *numValidMoves; i++) {
 		// remove Sea Moves
 		if (placeIsSea(validMoves[i])) {
-			removeMove(validMoves[i], validMoves, numValidMoves);
+			removeMove(dv, validMoves[i], validMoves, numValidMoves);
 		} else if (isDoubleBack(validMoves[i])) {
     		// if the double back move is a sea move, remove it!
     		PlaceId move = resolveDoubleBack(dv, validMoves[i]);
     		if (placeIsSea(move)) {
-    			removeMove(move, validMoves, numValidMoves);
+    			removeMove(dv, move, validMoves, numValidMoves);
     		}
     	}
 	} 
@@ -591,7 +600,7 @@ void removeHide(DraculaView dv, PlaceId *validMoves, int *numValidMoves)
 {
 	for (int i = 0; i < *numValidMoves; i++) {
 		if (validMoves[i] == HIDE || validMoves[i] == DOUBLE_BACK_1)
-			removeMove(validMoves[i], validMoves, numValidMoves);
+			removeMove(dv, validMoves[i], validMoves, numValidMoves);
 	}	
 }
 
@@ -603,5 +612,7 @@ void removeClosestHunterReachable(DraculaView dv, PlaceId *validMoves,
 	for (int i = 0; i < *numValidMoves; i++)
 		for (int j = 0; j < numLocs; j++)
 			if (validMoves[i] == closestReachable[j])
-				removeMove(validMoves[i], validMoves, numValidMoves);
-}			
+				removeMove(dv, validMoves[i], validMoves, numValidMoves);
+}		
+
+	
