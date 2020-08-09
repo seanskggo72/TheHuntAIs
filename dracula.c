@@ -50,6 +50,9 @@ void McBubbleSort(int *a, int max);
 bool isOnMainland(PlaceId Location);
 bool isDracOnSea(DraculaView dv, Map map);
 void removeSeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves);
+void removeHide(DraculaView dv, PlaceId *validMoves, int *numValidMoves);
+void removeClosestHunterReachable(DraculaView dv, PlaceId *validMoves, 
+	int *numValidMoves, Player closest);
 //
 
 void decideDraculaMove(DraculaView dv)
@@ -104,6 +107,18 @@ void decideDraculaMove(DraculaView dv)
 	 
 	// Now calculate even better moves
 	Map map = DvGetMap(dv); 
+	
+	// If player is right next to drac, remove HIDES and DOUBLE_BACK_1s...
+	int distanceToClose = 0;
+	int temp[4];
+	Player closest = FindClosestPlayer(dv, map, &distanceToClose, temp);
+	if (distanceToClose < 3 ) removeHide(dv, validMoves, &numValidMoves);
+	
+	// if the distance to the cloest hunter is < 5, avoid going to places they 
+	// can reach
+	if (distanceToClose < 5)
+		removeClosestHunterReachable(dv, validMoves, &numValidMoves, closest);
+	
 	
 	// Make sea move - CHANGE TO BE A LOW HEALTH FUNC...
 	if (DvGetHealth(dv, PLAYER_DRACULA) <= LOW_HEALTH) {
@@ -476,7 +491,7 @@ void moveAwayFromClosestHunters(DraculaView dv, Map map, PlaceId *validMoves, in
 	char *bestPlay = NULL;
 	
 	// Get hunter locations
-	for (int i = 0; i < HUNTER_NUM; i++) 
+	for (int i = 0; i < (HUNTER_NUM - 2); i++) 
 		hunterLocs[i] = DvGetPlayerLocation(dv, i);
 			
 	McBubbleSort(hunterToDracDistance, HUNTER_NUM);
@@ -556,7 +571,8 @@ bool isDracOnSea(DraculaView dv, Map map)
     }
 }
 
-void removeSeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves) {
+void removeSeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves) 
+{
 	for (int i = 0; i < *numValidMoves; i++) {
 		// remove Sea Moves
 		if (placeIsSea(validMoves[i])) {
@@ -570,3 +586,22 @@ void removeSeaMoves(DraculaView dv, PlaceId *validMoves, int *numValidMoves) {
     	}
 	} 
 }
+
+void removeHide(DraculaView dv, PlaceId *validMoves, int *numValidMoves) 
+{
+	for (int i = 0; i < *numValidMoves; i++) {
+		if (validMoves[i] == HIDE || validMoves[i] == DOUBLE_BACK_1)
+			removeMove(validMoves[i], validMoves, numValidMoves);
+	}	
+}
+
+void removeClosestHunterReachable(DraculaView dv, PlaceId *validMoves, 
+	int *numValidMoves, Player closest) 
+{
+	int numLocs = 0;
+	PlaceId *closestReachable = DvWhereCanTheyGo(dv, closest, &numLocs);
+	for (int i = 0; i < *numValidMoves; i++)
+		for (int j = 0; j < numLocs; j++)
+			if (validMoves[i] == closestReachable[j])
+				removeMove(validMoves[i], validMoves, numValidMoves);
+}			
