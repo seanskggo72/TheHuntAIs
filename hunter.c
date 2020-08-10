@@ -68,7 +68,7 @@ static PlaceId alternateRoute(HunterView hv, PlaceId current);
 //
 // Version 4.0 - undergoing major reconstruction. When drac is found, the 
 // hunters use whereCanTheyGo function to randomly choose a hypothetical
-// place the drac can go and make shtat place the target place. Also a lot of
+// place the drac can go and makes that place the target place. Also a lot of
 // other functionalities were removed and added
 //
 // Version 5.0 - Final version. Although there are issues with hunters camping,
