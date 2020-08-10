@@ -56,7 +56,7 @@ static PlaceId alternateRoute(HunterView hv, PlaceId current);
 // found, then move towards the most recent location. Else, randomly 
 // wander about until the Dracula is found again.
 //
-// Version 2.0 - The huunters scout and if Dracula path is not found, then
+// Version 2.0 - The hunters scout and if Dracula path is not found, then
 // hunters move about randomly until found.
 // If hunter's health falls critically low, then the hunter
 // rests for that turn
