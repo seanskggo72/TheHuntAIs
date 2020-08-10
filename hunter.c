@@ -61,9 +61,9 @@ static PlaceId alternateRoute(HunterView hv, PlaceId current);
 // If hunter's health falls critically low, then the hunter
 // rests for that turn
 //
-// Version 3.0 (upcoming) - No two hunters can be in the same city.
+// Version 3.0 - No two hunters can be in the same city.
 //
-// Version 3.1 collective research decreased the performance drastically
+// Version 3.1 - collective research decreased the performance drastically
 // so the feature was removed
 //
 // Version 4.0 - undergoing major reconstruction. When drac is found, the 
